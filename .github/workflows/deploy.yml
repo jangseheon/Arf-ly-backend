@@ -21,14 +21,6 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      # 파이어베이스 json 파일 집어넣기
-      - name: Create Firebase Key File
-        env:
-          FIREBASE_SECRET: ${{ secrets.FIREBASE_KEY_JSON }}
-        run: |
-          mkdir -p src/main/resources/firebase
-          echo "$FIREBASE_SECRET" > src/main/resources/firebase/firebase-admin-key.json
-
       - name: Build with Gradle
         run: ./gradlew clean build -x test
 
