@@ -6,6 +6,7 @@ import com.capstone.arfly.common.exception.InvalidTokenException;
 import com.capstone.arfly.common.exception.UserAlreadyExistsException;
 import com.capstone.arfly.member.domain.Member;
 import com.capstone.arfly.member.domain.RefreshToken;
+import com.capstone.arfly.member.domain.SocialType;
 import com.capstone.arfly.member.domain.Terms;
 import com.capstone.arfly.member.domain.UserTermsAgreement;
 import com.capstone.arfly.member.dto.AccessTokenRequestDto;
@@ -21,6 +22,7 @@ import com.capstone.arfly.member.repository.UserTermsAgreementRepository;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.naming.AuthenticationException;
@@ -141,6 +143,28 @@ public class AuthService {
         RefreshToken refreshToken = optToken.get();
         refreshTokenRepository.delete(refreshToken);
     }
+
+
+    //이미 가입된 사용자인지 확인
+    public Member getMemberBySocialId(String socialId) {
+        return memberRepository.findBySocialId(socialId).orElse(null);
+    }
+
+    //Oauth 사용자 생성
+    public Member createOauth(String socialId, String email, SocialType socialType, String nickname) {
+        Member member;
+        if (nickname == null || nickname.isBlank()) {
+            member = Member.builder().userId(email).socialType(socialType).socialId(socialId)
+                    .build();
+        } else {
+            member = Member.builder().userId(email).socialType(socialType).socialId(socialId)
+                    .nickName(nickname + UUID.randomUUID())
+                    .build();
+        }
+        memberRepository.save(member);
+        return member;
+    }
+
 
 
 }
