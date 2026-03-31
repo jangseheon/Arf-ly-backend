@@ -32,4 +32,7 @@ public class UserTermsAgreement extends BaseCreatedEntity {
     @ManyToOne
     @JoinColumn(name = "terms_id",nullable = false)
     private Terms terms;
+
+    @Column(nullable = false)
+    private Boolean agreement;
 }
