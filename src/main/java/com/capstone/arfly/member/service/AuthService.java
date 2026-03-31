@@ -9,6 +9,7 @@ import com.capstone.arfly.member.domain.RefreshToken;
 import com.capstone.arfly.member.domain.Terms;
 import com.capstone.arfly.member.domain.UserTermsAgreement;
 import com.capstone.arfly.member.dto.AccessTokenRequestDto;
+import com.capstone.arfly.member.dto.LogoutRequestDto;
 import com.capstone.arfly.member.dto.MemberCreateDto;
 import com.capstone.arfly.member.dto.MemberLoginDto;
 import com.capstone.arfly.member.dto.TokenResponseDto;
@@ -127,6 +128,18 @@ public class AuthService {
         }
         Member member = optToken.get().getMember();
         return member;
+    }
+
+
+    public void logout(LogoutRequestDto logoutRequestDto) {
+        //토큰 유효성 검증
+        jwtTokenUtil.validateRefreshToken(logoutRequestDto.getRefreshToken());
+        Optional<RefreshToken> optToken = refreshTokenRepository.findByToken(logoutRequestDto.getRefreshToken());
+        if (optToken.isEmpty()) {
+            throw new InvalidTokenException();
+        }
+        RefreshToken refreshToken = optToken.get();
+        refreshTokenRepository.delete(refreshToken);
     }
 
 

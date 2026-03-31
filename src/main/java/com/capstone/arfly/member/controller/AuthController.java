@@ -5,6 +5,7 @@ import com.capstone.arfly.common.exception.ErrorResponse;
 import com.capstone.arfly.member.domain.Member;
 import com.capstone.arfly.member.dto.AccessTokenRequestDto;
 import com.capstone.arfly.member.dto.AccessTokenResponseDto;
+import com.capstone.arfly.member.dto.LogoutRequestDto;
 import com.capstone.arfly.member.dto.MemberCreateDto;
 import com.capstone.arfly.member.dto.MemberLoginDto;
 import com.capstone.arfly.member.dto.TokenResponseDto;
@@ -90,6 +91,22 @@ public class AuthController {
         AccessTokenResponseDto response = AccessTokenResponseDto.builder().accessToken(accessToken).build();
 
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+
+    @Operation(summary = "로그아웃 및 리프레시 토큰 무효화", description = "리프레시 토큰을 무효화한다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "토큰 무효화 성공(Body 데이터 없음)"),
+            @ApiResponse(responseCode = "401", description = "토큰의 유효성 검증 실패",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "401", description = "토큰이 만료",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PostMapping("/logout")
+    public ResponseEntity<?> doLogout(@Valid @RequestBody LogoutRequestDto logoutRequestDto) {
+        //토큰 검증 및 삭제
+        authService.logout(logoutRequestDto);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
 
