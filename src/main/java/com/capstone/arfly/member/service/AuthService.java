@@ -2,15 +2,19 @@ package com.capstone.arfly.member.service;
 
 import com.capstone.arfly.common.auth.JwtTokenUtil;
 import com.capstone.arfly.common.exception.InvalidCredentialsException;
+import com.capstone.arfly.common.exception.InvalidTokenException;
 import com.capstone.arfly.common.exception.UserAlreadyExistsException;
 import com.capstone.arfly.member.domain.Member;
+import com.capstone.arfly.member.domain.RefreshToken;
 import com.capstone.arfly.member.domain.Terms;
 import com.capstone.arfly.member.domain.UserTermsAgreement;
+import com.capstone.arfly.member.dto.AccessTokenRequestDto;
 import com.capstone.arfly.member.dto.MemberCreateDto;
 import com.capstone.arfly.member.dto.MemberLoginDto;
 import com.capstone.arfly.member.dto.TokenResponseDto;
 import com.capstone.arfly.member.dto.UserAgreementDto;
 import com.capstone.arfly.member.repository.MemberRepository;
+import com.capstone.arfly.member.repository.RefreshTokenRepository;
 import com.capstone.arfly.member.repository.TermsRepository;
 import com.capstone.arfly.member.repository.UserTermsAgreementRepository;
 import java.util.List;
@@ -18,6 +22,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import javax.naming.AuthenticationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -34,6 +39,7 @@ public class AuthService {
     private final TermsRepository termsRepository;
     private final UserTermsAgreementRepository userTermsAgreementRepository;
     private final JwtTokenUtil jwtTokenUtil;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     public Member create(MemberCreateDto memberCreateDto) {
         //중복 체크
@@ -108,6 +114,18 @@ public class AuthService {
         if (!passwordEncoder.matches(memberLoginDto.getPassword(), member.getPassword())) {
             throw new InvalidCredentialsException();
         }
+        return member;
+    }
+
+
+    public Member validateRefreshToken(AccessTokenRequestDto accessTokenRequestDto) {
+        //토큰 유효성 검증
+        jwtTokenUtil.validateRefreshToken(accessTokenRequestDto.getRefreshToken());
+        Optional<RefreshToken> optToken = refreshTokenRepository.findByToken(accessTokenRequestDto.getRefreshToken());
+        if (optToken.isEmpty()) {
+            throw new InvalidTokenException();
+        }
+        Member member = optToken.get().getMember();
         return member;
     }
 
