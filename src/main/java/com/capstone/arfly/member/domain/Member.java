@@ -23,21 +23,19 @@ public class Member {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    //일반 로그인을 받을 때는 특수문자는 제외한다.
     @Column(nullable = false, unique = true)
     private String userId;
 
-    //System
     private String password;
 
     @Builder.Default
     @Column(nullable = false, unique = true)
-    private String nickName = String.valueOf(UUID.randomUUID());
+    private String nickName = "유저" + UUID.randomUUID();
 
-    @Column(unique = true)//null 가능
+    @Column(unique = true)
     private String phoneNumber;
 
-    @Column(unique = true) //null 가능 -> Oauth에는 전화번호 인증이 필요하지 않기 때문에
+    @Column(unique = true)
     private String firebaseUid;
 
     @Enumerated(EnumType.STRING)
