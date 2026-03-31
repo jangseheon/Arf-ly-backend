@@ -26,7 +26,7 @@ jwt:
 
 oauth:
   google:
-    client-id: ${GOOGLE_CLIENT_ID }
+    client-id: ${GOOGLE_CLIENT_ID}
     client-secret: ${GOOGLE_SECRET}
     grant-type: ${GOOGLE_TYPE}
 
