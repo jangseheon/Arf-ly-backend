@@ -8,6 +8,8 @@ import com.capstone.arfly.member.dto.AccessTokenRequestDto;
 import com.capstone.arfly.member.dto.AccessTokenResponseDto;
 import com.capstone.arfly.member.dto.GoogleAccessTokenDto;
 import com.capstone.arfly.member.dto.GoogleProfileDto;
+import com.capstone.arfly.member.dto.KakaoAccessTokenDto;
+import com.capstone.arfly.member.dto.KakaoProfileDto;
 import com.capstone.arfly.member.dto.LogoutRequestDto;
 import com.capstone.arfly.member.dto.MemberCreateDto;
 import com.capstone.arfly.member.dto.MemberLoginDto;
@@ -15,6 +17,7 @@ import com.capstone.arfly.member.dto.RedirectDto;
 import com.capstone.arfly.member.dto.TokenResponseDto;
 import com.capstone.arfly.member.service.AuthService;
 import com.capstone.arfly.member.service.GoogleService;
+import com.capstone.arfly.member.service.KakaoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -40,6 +43,7 @@ public class AuthController {
     private final AuthService authService;
     private final JwtTokenUtil jwtTokenUtil;
     private final GoogleService googleService;
+    private final KakaoService kakaoService;
 
     @Operation(summary = "회원가입", description = "사용자의 정보를 받아 회원가입 진행 후 토큰을 반환한다.")
     @ApiResponses(value = {
@@ -146,7 +150,6 @@ public class AuthController {
     @PostMapping("/google/doLogin")
     public ResponseEntity<?> googleLogin(@Valid @RequestBody RedirectDto redirectDto) {
         //accessToken 발급
-        //나중에 리다이렉트 url을 검증하는 코드 필요 ->우리가 사전에 redirect를 정의해서 말이야
         GoogleAccessTokenDto accessToken = googleService.getAccessToken(redirectDto);
 
         // 사용자 정보 얻기
@@ -163,6 +166,54 @@ public class AuthController {
         TokenResponseDto response = authService.generateTokens(originalMember);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
+
+
+    @Operation(
+            summary = "카카오 소셜 로그인",
+            description = "카카오 인가 코드를 이용해 사용자 정보를 조회하고, 회원가입 또는 로그인을 처리한 뒤 JWT 토큰을 발급."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "로그인/회원가입 성공 및 토큰 발급",
+                    content = @Content(schema = @Schema(implementation = TokenResponseDto.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "잘못된 요청 (1. 파라미터 유효성 검증 실패(@Valid) 2. 인가 코드 문제  3. 리다이렉트 URI 불일치)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "카카오 인증 실패 (유효하지 않거나 만료된 카카오 액세스 토큰)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "서버 내부 오류 또는 카카오 인증 서버 통신 불가",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    @PostMapping("/kakao/doLogin")
+    public ResponseEntity<?> kakaoLogin(@Valid @RequestBody RedirectDto redirectDto) {
+        KakaoAccessTokenDto accessToken = kakaoService.getAccessToken(redirectDto);
+
+        KakaoProfileDto kakaoProfileDto = kakaoService.getKakaoProfile(accessToken.getAccess_token());
+
+        Member originalMember = authService.getMemberBySocialId(kakaoProfileDto.getId());
+        if (originalMember == null) {
+            originalMember = authService.createOauth(kakaoProfileDto.getId(),
+                    kakaoProfileDto.getKakao_account().getEmail(),
+                    SocialType.KAKAO, kakaoProfileDto.getKakao_account().getProfile().getNickname());
+        }
+
+        TokenResponseDto response = authService.generateTokens(originalMember);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+
+    }
+
+
 
 
 }
