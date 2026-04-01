@@ -1,0 +1,4 @@
+# Local Develop ENV
+
+firebase:
+  key-path: ${FIREBASE_LOCAL_KEY_PATH}
