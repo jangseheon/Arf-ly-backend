@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 public class PasswordResponseDto {
 
     @Schema(
-            description = "패스워스 재설정을 위한 토큰(패스워드 재설정 요청 때 해당 토큰 함께 첨부)",
+            description = "패스워드 재설정을 위한 토큰(패스워드 재설정 요청 때 해당 토큰 함께 첨부)",
             example = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ...",
             requiredMode = Schema.RequiredMode.REQUIRED
     )

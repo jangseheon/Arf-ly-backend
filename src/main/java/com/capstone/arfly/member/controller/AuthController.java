@@ -17,6 +17,7 @@ import com.capstone.arfly.member.dto.NaverAccessTokenDto;
 import com.capstone.arfly.member.dto.NaverProfileDto;
 import com.capstone.arfly.member.dto.NaverRedirectDto;
 import com.capstone.arfly.member.dto.PasswordRequestDto;
+import com.capstone.arfly.member.dto.PasswordResetRequestDto;
 import com.capstone.arfly.member.dto.PasswordResponseDto;
 import com.capstone.arfly.member.dto.PhoneAuthInfoDto;
 import com.capstone.arfly.member.dto.RedirectDto;
@@ -383,7 +384,27 @@ public class AuthController {
         // 토큰 생성 및 발급
         String passwordResetToken = jwtTokenUtil.createPasswordRestToken(member);
         PasswordResponseDto response = PasswordResponseDto.builder().passwordResetToken(passwordResetToken).build();
-        return new ResponseEntity<>(response,HttpStatus.OK);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Operation(summary = "비밀번호 재설정", description = "비밀번호 재설정 토큰을 검증하고 사용자의 비밀번호를 변경한다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "비밀번호 재설정 성공(응답 바디 X)"),
+            @ApiResponse(responseCode = "401", description = "토큰의 유효성 검증 실패 혹은 토큰 만료",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "존재하지 않는 사용자",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    @PostMapping("password/reset")
+    public ResponseEntity<?> resetPassword(@RequestBody PasswordResetRequestDto passwordResetRequestDto) {
+        //토큰 검증 및 사용자 추출
+        Long id = jwtTokenUtil.validatePasswordResetToken(passwordResetRequestDto.getPasswordResetToken());
+        //패스워드 변경
+        authService.resetPassword(id, passwordResetRequestDto.getNewPassword());
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
 

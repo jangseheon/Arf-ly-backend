@@ -195,11 +195,19 @@ public class AuthService {
             throw new UserNotExistsException();
         }
         Member member = findMember.get();
-        //id
         if(!member.getUserId().equals(userId)){
             throw new UserIdentityMismatchException();
         }
         return member;
+    }
+
+    public void resetPassword(Long id, String newPassword){
+        Optional<Member> findMember = memberRepository.findById(id);
+        if(findMember.isEmpty()){
+            throw new UserNotExistsException();
+        }
+        Member member = findMember.get();
+        member.updatePassword(newPassword);
     }
 
 

@@ -61,4 +61,9 @@ public class Member {
     @Builder.Default
     private boolean notificationEnabled = true;
 
+
+    public void updatePassword(String encodedPassword) {
+        this.password = encodedPassword;
+    }
+
 }

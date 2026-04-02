@@ -7,6 +7,7 @@ import com.capstone.arfly.common.exception.TokenExpiredException;
 import com.capstone.arfly.member.domain.Member;
 import com.capstone.arfly.member.domain.RefreshToken;
 import com.capstone.arfly.member.repository.RefreshTokenRepository;
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -68,7 +69,7 @@ public class JwtTokenUtil {
         return token;
     }
 
-    public void validateRefreshToken(String refreshToken){
+    public void validateRefreshToken(String refreshToken) {
         try {
             Jwts.parser().verifyWith(REFRESH_SECRET_KEY).build().parseSignedClaims(refreshToken)
                     .getPayload();
@@ -79,14 +80,30 @@ public class JwtTokenUtil {
         }
     }
 
-    public String createPasswordRestToken(Member member){
+    public String createPasswordRestToken(Member member) {
         Date createdAt = new Date();
-        Date expiredAt = new Date(createdAt.getTime() + passwordResetExpiration* 60 * 1000L);
+        Date expiredAt = new Date(createdAt.getTime() + passwordResetExpiration * 60 * 1000L);
         String passwordResetToken = Jwts.builder().subject(String.valueOf(member.getId()))
                 .issuedAt(createdAt)
                 .expiration(expiredAt)
                 .signWith(PASSWORD_RESET_KEY)
                 .compact();
         return passwordResetToken;
+    }
+
+    public Long validatePasswordResetToken(String passwordResetToken) {
+        try {
+            String id = Jwts.parser()
+                    .verifyWith(PASSWORD_RESET_KEY)
+                    .build()
+                    .parseSignedClaims(passwordResetToken)
+                    .getPayload()
+                    .getSubject();
+            return Long.parseLong(id);
+        } catch (ExpiredJwtException e) {
+            throw new TokenExpiredException();
+        } catch (JwtException | IllegalArgumentException e) {
+            throw new InvalidTokenException();
+        }
     }
 }
