@@ -5,6 +5,8 @@ import com.capstone.arfly.common.exception.InvalidCredentialsException;
 import com.capstone.arfly.common.exception.InvalidTokenException;
 import com.capstone.arfly.common.exception.PhoneAlreadyException;
 import com.capstone.arfly.common.exception.UserAlreadyExistsException;
+import com.capstone.arfly.common.exception.UserIdentityMismatchException;
+import com.capstone.arfly.common.exception.UserNotExistsException;
 import com.capstone.arfly.member.domain.Member;
 import com.capstone.arfly.member.domain.RefreshToken;
 import com.capstone.arfly.member.domain.SocialType;
@@ -176,5 +178,37 @@ public class AuthService {
             throw new PhoneAlreadyException();
         }
     }
+
+    public Member findUserId(PhoneAuthInfoDto phoneAuthInfoDto) {
+        Optional<Member> findMember = memberRepository.findByFirebaseUidAndPhoneNumber(
+                phoneAuthInfoDto.getUid(), phoneAuthInfoDto.getPhoneNumber());
+        if(findMember.isEmpty()){
+            throw new UserNotExistsException();
+        }
+        return findMember.get();
+    }
+
+    public Member authenticateUserForPasswordReset(PhoneAuthInfoDto phoneAuthInfoDto, String userId){
+        Optional<Member> findMember = memberRepository.findByFirebaseUidAndPhoneNumber(
+                phoneAuthInfoDto.getUid(), phoneAuthInfoDto.getPhoneNumber());
+        if(findMember.isEmpty()){
+            throw new UserNotExistsException();
+        }
+        Member member = findMember.get();
+        if(!member.getUserId().equals(userId)){
+            throw new UserIdentityMismatchException();
+        }
+        return member;
+    }
+
+    public void resetPassword(Long id, String newPassword){
+        Optional<Member> findMember = memberRepository.findById(id);
+        if(findMember.isEmpty()){
+            throw new UserNotExistsException();
+        }
+        Member member = findMember.get();
+        member.updatePassword(newPassword);
+    }
+
 
 }

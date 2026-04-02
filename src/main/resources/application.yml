@@ -22,6 +22,8 @@ jwt:
   access-expiration: ${ACCESS_EXPIRATION}
   refresh-secret: ${REFRESH_SECRET}
   refresh-expiration: ${REFRESH_EXPIRATION}
+  password-reset-secret: ${PASSWORD_RESET_SECRET}
+  password-reset-expiration: ${PASSWORD_RESET_EXPIRATION}
 
 
 oauth:
@@ -37,4 +39,5 @@ oauth:
   naver:
     client_id: ${NAVER_CLIENT_ID}
     client-secret: ${NAVER_SECRET}
+
 

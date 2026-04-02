@@ -7,6 +7,7 @@ import com.capstone.arfly.common.exception.TokenExpiredException;
 import com.capstone.arfly.member.domain.Member;
 import com.capstone.arfly.member.domain.RefreshToken;
 import com.capstone.arfly.member.repository.RefreshTokenRepository;
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -23,18 +24,24 @@ public class JwtTokenUtil {
     private final long refreshExpiration;
     private final SecretKey REFRESH_SECRET_KEY;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final long passwordResetExpiration;
+    private final SecretKey PASSWORD_RESET_KEY;
 
 
     public JwtTokenUtil(@Value("${jwt.access-expiration}") long accessExpiration,
                         @Value("${jwt.access-secret}") String accessSecretKey
             , @Value("${jwt.refresh-expiration}") long refreshExpiration,
                         @Value("${jwt.refresh-secret}") String refreshSecretKey,
+                        @Value("${jwt.password-reset-expiration}") long passwordResetExpiration,
+                        @Value("${jwt.password-reset-secret}") String passwordResetSecretKey,
                         RefreshTokenRepository refreshTokenRepository
     ) {
         this.accessExpiration = accessExpiration;
         this.refreshExpiration = refreshExpiration;
+        this.passwordResetExpiration = passwordResetExpiration;
         this.REFRESH_SECRET_KEY = Keys.hmacShaKeyFor(getDecoder().decode(refreshSecretKey));
         this.ACCESS_SECRET_KEY = Keys.hmacShaKeyFor(getDecoder().decode(accessSecretKey));
+        this.PASSWORD_RESET_KEY = Keys.hmacShaKeyFor(getDecoder().decode(passwordResetSecretKey));
         this.refreshTokenRepository = refreshTokenRepository;
     }
 
@@ -62,13 +69,40 @@ public class JwtTokenUtil {
         return token;
     }
 
-    public void validateRefreshToken(String refreshToken){
+    public void validateRefreshToken(String refreshToken) {
         try {
             Jwts.parser().verifyWith(REFRESH_SECRET_KEY).build().parseSignedClaims(refreshToken)
                     .getPayload();
         } catch (ExpiredJwtException e) {
             throw new TokenExpiredException();
         } catch (JwtException e) {
+            throw new InvalidTokenException();
+        }
+    }
+
+    public String createPasswordRestToken(Member member) {
+        Date createdAt = new Date();
+        Date expiredAt = new Date(createdAt.getTime() + passwordResetExpiration * 60 * 1000L);
+        String passwordResetToken = Jwts.builder().subject(String.valueOf(member.getId()))
+                .issuedAt(createdAt)
+                .expiration(expiredAt)
+                .signWith(PASSWORD_RESET_KEY)
+                .compact();
+        return passwordResetToken;
+    }
+
+    public Long validatePasswordResetToken(String passwordResetToken) {
+        try {
+            String id = Jwts.parser()
+                    .verifyWith(PASSWORD_RESET_KEY)
+                    .build()
+                    .parseSignedClaims(passwordResetToken)
+                    .getPayload()
+                    .getSubject();
+            return Long.parseLong(id);
+        } catch (ExpiredJwtException e) {
+            throw new TokenExpiredException();
+        } catch (JwtException | IllegalArgumentException e) {
             throw new InvalidTokenException();
         }
     }
