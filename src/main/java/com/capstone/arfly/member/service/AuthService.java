@@ -3,6 +3,7 @@ package com.capstone.arfly.member.service;
 import com.capstone.arfly.common.auth.JwtTokenUtil;
 import com.capstone.arfly.common.exception.InvalidCredentialsException;
 import com.capstone.arfly.common.exception.InvalidTokenException;
+import com.capstone.arfly.common.exception.PhoneAlreadyException;
 import com.capstone.arfly.common.exception.UserAlreadyExistsException;
 import com.capstone.arfly.member.domain.Member;
 import com.capstone.arfly.member.domain.RefreshToken;
@@ -13,6 +14,7 @@ import com.capstone.arfly.member.dto.AccessTokenRequestDto;
 import com.capstone.arfly.member.dto.LogoutRequestDto;
 import com.capstone.arfly.member.dto.MemberCreateDto;
 import com.capstone.arfly.member.dto.MemberLoginDto;
+import com.capstone.arfly.member.dto.PhoneAuthInfoDto;
 import com.capstone.arfly.member.dto.TokenResponseDto;
 import com.capstone.arfly.member.dto.UserAgreementDto;
 import com.capstone.arfly.member.repository.MemberRepository;
@@ -166,5 +168,13 @@ public class AuthService {
     }
 
 
+    //전화번호 및 UID 중복 검사
+    public void verifyPhoneAuthInfo(PhoneAuthInfoDto phoneAuthInfo) {
+        Optional<Member> findMember = memberRepository.findByFirebaseUidAndPhoneNumber(
+                phoneAuthInfo.getUid(), phoneAuthInfo.getPhoneNumber());
+        if (findMember.isPresent()) {
+            throw new PhoneAlreadyException();
+        }
+    }
 
 }

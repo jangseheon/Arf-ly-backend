@@ -16,13 +16,16 @@ import com.capstone.arfly.member.dto.MemberLoginDto;
 import com.capstone.arfly.member.dto.NaverAccessTokenDto;
 import com.capstone.arfly.member.dto.NaverProfileDto;
 import com.capstone.arfly.member.dto.NaverRedirectDto;
+import com.capstone.arfly.member.dto.PhoneAuthInfoDto;
 import com.capstone.arfly.member.dto.RedirectDto;
 import com.capstone.arfly.member.dto.TokenResponseDto;
 import com.capstone.arfly.member.service.AuthService;
+import com.capstone.arfly.member.service.FirebaseService;
 import com.capstone.arfly.member.service.GoogleService;
 import com.capstone.arfly.member.service.KakaoService;
 import com.capstone.arfly.member.service.NaverService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -35,6 +38,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -49,6 +53,7 @@ public class AuthController {
     private final GoogleService googleService;
     private final KakaoService kakaoService;
     private final NaverService naverService;
+    private final FirebaseService firebaseService;
 
     @Operation(summary = "회원가입", description = "사용자의 정보를 받아 회원가입 진행 후 토큰을 반환한다.")
     @ApiResponses(value = {
@@ -173,7 +178,6 @@ public class AuthController {
     }
 
 
-
     @Operation(
             summary = "카카오 소셜 로그인",
             description = "카카오 인가 코드를 이용해 사용자 정보를 조회하고, 회원가입 또는 로그인을 처리한 뒤 JWT 토큰을 발급."
@@ -262,5 +266,42 @@ public class AuthController {
 
     }
 
+
+    @Operation(
+            summary = "토큰 검사 및 전화번호 중복 검사",
+            description = "파이어베이스에서 추출한 토큰이 맞는지 검증하고, 토큰에 포함된 전화번호의 중복 여부를 확인. 헤더의 Bearer 토큰이 필수."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "인증 성공(응답 바디 없음)"
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "잘못된 요청 (헤더 형식 오류, 토큰 누락, 필수 정보 누락 등)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "인증 실패 (토큰 만료, 폐기, 유효하지 않은 토큰)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "409",
+                    description = "이미 가입된 전화번호 (전화번호 중복 발생)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    @PostMapping("/phone/verify")
+    public ResponseEntity<Void> verifyPhoneNumber(
+            @Parameter(name = "Authorization", description = "Bearer {Firebase_Token}", required = true)
+            @RequestHeader("Authorization") String token) {
+        // 토큰 검증 및 유저 정보 추출
+        PhoneAuthInfoDto phoneAuthInfo = firebaseService.verifyTokenAndGetInfo(token);
+
+        // 중복 검사
+        authService.verifyPhoneAuthInfo(phoneAuthInfo);
+
+        return ResponseEntity.ok().build();
+    }
 
 }
