@@ -330,6 +330,7 @@ public class AuthController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))
             )
     })
+    @PostMapping("id/find")
     public ResponseEntity<?> findUserId(
             @Parameter(name = "Authorization", description = "Bearer {Firebase_Token}", required = true)
             @RequestHeader("Authorization") String token) {
@@ -367,7 +368,9 @@ public class AuthController {
                     description = "존재하지 않는 사용자",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))
             )
-    })
+    }
+    )
+    @PostMapping("password/verify")
     public ResponseEntity<?> verifyUserForPasswordReset(
             @Parameter(name = "Authorization", description = "Bearer {Firebase_Token}", required = true)
             @RequestHeader("Authorization") String token,
@@ -382,5 +385,6 @@ public class AuthController {
         PasswordResponseDto response = PasswordResponseDto.builder().passwordResetToken(passwordResetToken).build();
         return new ResponseEntity<>(response,HttpStatus.OK);
     }
+
 
 }
