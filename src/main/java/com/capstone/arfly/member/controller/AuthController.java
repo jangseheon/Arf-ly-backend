@@ -331,7 +331,7 @@ public class AuthController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))
             )
     })
-    @PostMapping("id/find")
+    @PostMapping("/id/find")
     public ResponseEntity<?> findUserId(
             @Parameter(name = "Authorization", description = "Bearer {Firebase_Token}", required = true)
             @RequestHeader("Authorization") String token) {
@@ -371,7 +371,7 @@ public class AuthController {
             )
     }
     )
-    @PostMapping("password/verify")
+    @PostMapping("/password/verify")
     public ResponseEntity<?> verifyUserForPasswordReset(
             @Parameter(name = "Authorization", description = "Bearer {Firebase_Token}", required = true)
             @RequestHeader("Authorization") String token,
@@ -398,7 +398,7 @@ public class AuthController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))
             )
     })
-    @PostMapping("password/reset")
+    @PostMapping("/password/reset")
     public ResponseEntity<?> resetPassword(@RequestBody PasswordResetRequestDto passwordResetRequestDto) {
         //토큰 검증 및 사용자 추출
         Long id = jwtTokenUtil.validatePasswordResetToken(passwordResetRequestDto.getPasswordResetToken());
