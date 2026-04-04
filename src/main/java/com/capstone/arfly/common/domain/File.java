@@ -17,7 +17,7 @@ public class File extends BaseCreatedEntity {
     @Column(nullable = false)
     private String fileName;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String fileKey;
 
     @Column(nullable = false)

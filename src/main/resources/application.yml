@@ -1,3 +1,5 @@
+file:
+  max-image-size: 50MB
 
 spring:
   datasource:
@@ -5,6 +7,22 @@ spring:
     username: ${DB_USER}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
+
+
+  cloud:
+    aws:
+      credentials:
+        access-key: ${AWS_ACCESS_KEY}
+        secret-key: ${AWS_SECRET_KEY}
+      region:
+        static: ap-northeast-2
+      s3:
+        bucket: ${S3_BUCKET_NAME}
+
+  servlet:
+    multipart:
+      max-file-size: 100MB # 비디오를 고려한 파일 최대 크기
+      max-request-size: 100MB # 한번의 요청에 담을 수 있는 크기
 
   jpa:
     hibernate:
