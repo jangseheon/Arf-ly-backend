@@ -19,6 +19,8 @@ public enum ErrorCode {
     USER_NOT_EXISTS(HttpStatus.NOT_FOUND,"요청하신 사용자는 존재하지 않습니다.","USER_NOT_EXISTS"),
     USER_IDENTITY_MISMATCH(HttpStatus.BAD_REQUEST,"사용자의 신원 정보가 일치하지 않습니다.","USER_INFO_NOT_MISMATCH"),
 
+    BREED_NOT_FOUND(HttpStatus.BAD_REQUEST,"품종을 찾을 수 없습니다.","BREED_NOT_FOUND"),
+
     FILE_EMPTY(HttpStatus.BAD_REQUEST,"업로드할 파일이 없습니다.","FILE_EMPTY"),
     FILENAME_MISSING(HttpStatus.BAD_REQUEST,"파일명이 존재하지 않습니다.","FILENAME_MISSING"),
     FILE_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR,"현재 파일과 관련하여 서버에 문제가 있습니다.","FILE_NOT_FOUND"),

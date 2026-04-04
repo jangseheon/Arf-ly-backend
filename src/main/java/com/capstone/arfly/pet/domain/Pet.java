@@ -39,8 +39,14 @@ public class Pet extends BaseTimeEntity {
     @Column(nullable = false)
     private Boolean neutered;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Sex sex;
+
     @Column(nullable = false)
     private Integer birth;
 
     private Double weight;
+
+    private String note;
 }
