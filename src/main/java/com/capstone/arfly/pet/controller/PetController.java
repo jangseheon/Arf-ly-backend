@@ -167,4 +167,24 @@ public class PetController {
     }
 
 
+    @Operation(
+            summary = "반려동물 삭제",
+            description = "반려동물 정보를 삭제합니다. 연결된 프로필 이미지는 자정에 S3에서 자동으로 삭제됩니다."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "반려동물 삭제 성공"),
+            @ApiResponse(responseCode = "403", description = "삭제 권한 없음 (내 반려동물이 아님)"),
+            @ApiResponse(responseCode = "404", description = "반려동물을 찾을 수 없음")
+    })
+    @DeleteMapping("/{petId}")
+    public ResponseEntity<Void> deletePet(
+            @Parameter(description = "삭제할 반려동물 ID", required = true)
+            @PathVariable Long petId,
+            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
+
+        Long memberId = Long.parseLong(userDetails.getUsername());
+        petService.deletePet(memberId, petId);
+        return ResponseEntity.noContent().build();
+    }
+
 }

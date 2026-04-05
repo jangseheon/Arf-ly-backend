@@ -237,5 +237,25 @@ public class PetService {
                 .build();
     }
 
+    // 반려동물 정보 삭제 api
+    @Transactional
+    public void deletePet(Long memberId, Long petId) {
+        Pet pet = petRepository.findById(petId)
+                .orElseThrow(()-> new BusinessException(ErrorCode.PET_NOT_FOUND));
+
+        if(!pet.getMember().getId().equals(memberId)){
+            throw new BusinessException(ErrorCode.FORBIDDEN);
+        }
+
+        //프로필 사진 처리하기
+        File profileImage = pet.getProfileImage();
+        if(profileImage != null){
+            profileImage.markAsDeleted();
+        }
+
+        petAllergyRepository.deleteAllByPet(pet);
+        petRepository.delete(pet);
+    }
+
 
 }
