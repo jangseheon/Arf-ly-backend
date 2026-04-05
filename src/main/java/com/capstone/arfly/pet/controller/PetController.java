@@ -5,6 +5,7 @@ import com.capstone.arfly.common.exception.ErrorResponse;
 import com.capstone.arfly.pet.domain.Species;
 import com.capstone.arfly.pet.dto.CreatePetRequest;
 import com.capstone.arfly.pet.dto.PetDetailResponse;
+import com.capstone.arfly.pet.dto.PetListResponse;
 import com.capstone.arfly.pet.dto.UpdatePetRequest;
 import com.capstone.arfly.pet.repository.PetRepository;
 import com.capstone.arfly.pet.service.PetService;
@@ -145,6 +146,23 @@ public class PetController {
 
         PetDetailResponse response = petService.getPetDetail(memberId, petId);
 
+        return ResponseEntity.ok(response);
+    }
+
+
+    @Operation(
+            summary = "내 반려동물 목록 조회",
+            description = "내 계정에 등록된 모든 반려동물의 간단한 정보(ID, 이름, 사진) 목록을 조회합니다."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "목록 조회 성공")
+    })
+    @GetMapping
+    public ResponseEntity<PetListResponse> getPetList(
+            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails){
+
+        Long memberId = Long.parseLong(userDetails.getUsername());
+        PetListResponse response = petService.getPetList(memberId);
         return ResponseEntity.ok(response);
     }
 

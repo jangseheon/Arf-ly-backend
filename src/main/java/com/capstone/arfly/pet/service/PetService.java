@@ -12,9 +12,7 @@ import com.capstone.arfly.pet.domain.Breeds;
 import com.capstone.arfly.pet.domain.Pet;
 import com.capstone.arfly.pet.domain.PetAllergy;
 import com.capstone.arfly.pet.domain.Species;
-import com.capstone.arfly.pet.dto.CreatePetRequest;
-import com.capstone.arfly.pet.dto.PetDetailResponse;
-import com.capstone.arfly.pet.dto.UpdatePetRequest;
+import com.capstone.arfly.pet.dto.*;
 import com.capstone.arfly.pet.repository.BreedsRepository;
 import com.capstone.arfly.pet.repository.PetAllergyRepository;
 import com.capstone.arfly.pet.repository.PetRepository;
@@ -214,7 +212,29 @@ public class PetService {
                 .profileImageUrl(profileImageUrl)
                 .build();
 
+    }
 
+    // 내가 가진 모든 반려동물의 정보 조회
+    @Transactional(readOnly = true)
+    public PetListResponse getPetList(Long memberId) {
+        List<Pet> petList = petRepository.findAllByMemberId(memberId);
+        List<PetSummaryDto> summaryList = petList.stream().map(pet -> {
+
+            String profileImageUrl = null;
+            File profileImage = pet.getProfileImage();
+            if(profileImage != null && !profileImage.getDeleted()){
+                profileImageUrl = s3Uploader.getPublicUrl(profileImage.getFileKey());
+            }
+            return PetSummaryDto.builder()
+                    .petId(pet.getId())
+                    .name(pet.getName())
+                    .profileImageUrl(profileImageUrl)
+                    .build();
+        }).toList();
+
+        return PetListResponse.builder()
+                .pets(summaryList)
+                .build();
     }
 
 
