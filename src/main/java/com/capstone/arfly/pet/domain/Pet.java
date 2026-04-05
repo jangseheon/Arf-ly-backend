@@ -49,4 +49,18 @@ public class Pet extends BaseTimeEntity {
     private Double weight;
 
     private String note;
+
+    public void update(String name, Breeds breeds, File profileImage, Integer birth,
+                       Double weight, Boolean neutered, Species species, Sex sex, String note) {
+        this.name = name;
+        this.breeds = breeds;
+        this.profileImage = profileImage;
+        this.birth = birth;
+        this.weight = weight;
+        this.neutered = neutered;
+        this.species = species;
+        this.sex = sex;
+        this.note = note;
+    }
+
 }

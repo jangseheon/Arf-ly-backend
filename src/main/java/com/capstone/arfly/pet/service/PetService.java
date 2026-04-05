@@ -13,10 +13,12 @@ import com.capstone.arfly.pet.domain.Pet;
 import com.capstone.arfly.pet.domain.PetAllergy;
 import com.capstone.arfly.pet.domain.Species;
 import com.capstone.arfly.pet.dto.CreatePetRequest;
+import com.capstone.arfly.pet.dto.UpdatePetRequest;
 import com.capstone.arfly.pet.repository.BreedsRepository;
 import com.capstone.arfly.pet.repository.PetAllergyRepository;
 import com.capstone.arfly.pet.repository.PetRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -72,8 +74,8 @@ public class PetService {
 
         petRepository.save(pet);
 
-        if(request.getPetAllergies() != null && !request.getPetAllergies().isEmpty()){
-            for(String allergyName : request.getPetAllergies()){
+        if(request.getAllergies() != null && !request.getAllergies().isEmpty()){
+            for(String allergyName : request.getAllergies()){
                 PetAllergy petAllergy = PetAllergy.builder()
                         .pet(pet)
                         .name(allergyName)
@@ -107,6 +109,8 @@ public class PetService {
         }
     }
 
+
+    // 품종 조회
     @Transactional
     public List<String> getBreedsBySpecies(Species species) {
         List<Breeds> breedsList = breedsRepository.findBySpecies(species);
@@ -115,5 +119,65 @@ public class PetService {
                 .map(Breeds::getName)
                 .toList();
     }
+
+    // 펫 정보 수정
+    @Transactional
+    public void updatePet(Long memberId, Long petId, UpdatePetRequest request, MultipartFile petFile ) {
+        Pet pet = petRepository.findById(petId)
+                .orElseThrow(()-> new BusinessException(ErrorCode.PET_NOT_FOUND));
+
+        if(!pet.getMember().getId().equals(memberId)){
+            throw new BusinessException(ErrorCode.FORBIDDEN);
+        }
+
+        Breeds breeds = breedsRepository.findByName(request.getBreeds())
+                .orElseThrow(()-> new BusinessException(ErrorCode.BREED_NOT_FOUND));
+
+        File profileImage = pet.getProfileImage();
+        if(petFile != null && !petFile.isEmpty()){
+
+            if(profileImage != null){
+                profileImage.markAsDeleted();
+            }
+
+            FileDetailDto metaData = s3Uploader.makeMetaData(petFile, "pets");
+            s3Uploader.uploadFile(metaData.getKey(),petFile);
+
+            profileImage = File.builder()
+                    .fileName(metaData.getOriginalFileName())
+                    .fileKey(metaData.getKey())
+                    .fileSize(metaData.getFileSize())
+                    .fileType(metaData.getFileType())
+                    .deleted(false)
+                    .build();
+            profileImage = fileRepository.save(profileImage);
+        }
+
+        pet.update(
+                request.getName(),
+                breeds,
+                profileImage,
+                extractYear(request.getBirth()),
+                request.getWeight(),
+                request.isNeutered(),
+                request.getSpecies(),
+                request.getSex(),
+                request.getNote()
+        );
+
+        petAllergyRepository.deleteAllByPet(pet);
+
+        if(request.getAllergies() != null && !request.getAllergies().isEmpty()){
+            for(String allergyName : request.getAllergies()){
+                PetAllergy petAllergy = PetAllergy.builder()
+                        .pet(pet)
+                        .name(allergyName)
+                        .build();
+                petAllergyRepository.save(petAllergy);
+            }
+        }
+
+    }
+
 
 }

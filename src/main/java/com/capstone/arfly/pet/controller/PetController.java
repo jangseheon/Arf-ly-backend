@@ -4,6 +4,7 @@ package com.capstone.arfly.pet.controller;
 import com.capstone.arfly.common.exception.ErrorResponse;
 import com.capstone.arfly.pet.domain.Species;
 import com.capstone.arfly.pet.dto.CreatePetRequest;
+import com.capstone.arfly.pet.dto.UpdatePetRequest;
 import com.capstone.arfly.pet.repository.PetRepository;
 import com.capstone.arfly.pet.service.PetService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -93,5 +94,36 @@ public class PetController {
 
         return ResponseEntity.ok(breedNames);
     }
+
+    @Operation(
+            summary = "반려동물 정보 수정",
+            description = "기존 반려동물의 정보를 수정합니다. 사진과 정보(JSON)를 함께 보냅니다."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "반려동물 수정 성공 (본문 없음)"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터"),
+            @ApiResponse(responseCode = "403", description = "수정 권한 없음 (내 반려동물이 아님)"),
+            @ApiResponse(responseCode = "404", description = "반려동물을 찾을 수 없음")
+    })
+    @PostMapping(value = "/{petId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Void> updatePet(
+            @Parameter(description = "수정할 반려동물의 ID", required = true)
+            @PathVariable Long petId,
+
+            @Parameter(description = "반려동물 수정 정보 (application/json)", schema = @Schema(implementation = UpdatePetRequest.class))
+            @RequestPart(value = "request") UpdatePetRequest request,
+
+            @Parameter(description = "새로운 프로필 사진 파일 (없으면 기존 사진 유지)", schema = @Schema(type = "string", format = "binary"))
+            @RequestPart(value = "file", required = false) MultipartFile petFile,
+
+            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
+
+        Long memberId = Long.parseLong(userDetails.getUsername());
+
+        petService.updatePet(memberId, petId, request, petFile);
+
+        return ResponseEntity.noContent().build();
+    }
+
 
 }

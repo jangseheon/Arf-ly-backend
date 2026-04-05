@@ -30,4 +30,8 @@ public class File extends BaseCreatedEntity {
     @Builder.Default
     @Column(nullable = false)
     private Boolean deleted = false;
+
+    public void markAsDeleted() {
+        this.deleted = true;
+    }
 }
