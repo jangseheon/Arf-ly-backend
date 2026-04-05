@@ -11,6 +11,7 @@ import com.capstone.arfly.member.repository.MemberRepository;
 import com.capstone.arfly.pet.domain.Breeds;
 import com.capstone.arfly.pet.domain.Pet;
 import com.capstone.arfly.pet.domain.PetAllergy;
+import com.capstone.arfly.pet.domain.Species;
 import com.capstone.arfly.pet.dto.CreatePetRequest;
 import com.capstone.arfly.pet.repository.BreedsRepository;
 import com.capstone.arfly.pet.repository.PetAllergyRepository;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -103,6 +105,15 @@ public class PetService {
             //abcd-12-22처럼 숫자가 아닌 값을 보냈을 때의 방어
             throw new BusinessException(ErrorCode.INVALID_HEADER);
         }
+    }
+
+    @Transactional
+    public List<String> getBreedsBySpecies(Species species) {
+        List<Breeds> breedsList = breedsRepository.findBySpecies(species);
+
+        return breedsList.stream()
+                .map(Breeds::getName)
+                .toList();
     }
 
 }

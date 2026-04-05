@@ -17,4 +17,7 @@ public class Breeds {
 
     @Column(nullable = false)
     private String name;
+
+    @Enumerated(EnumType.STRING)
+    private Species species;
 }

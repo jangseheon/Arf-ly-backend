@@ -2,6 +2,7 @@ package com.capstone.arfly.pet.controller;
 
 
 import com.capstone.arfly.common.exception.ErrorResponse;
+import com.capstone.arfly.pet.domain.Species;
 import com.capstone.arfly.pet.dto.CreatePetRequest;
 import com.capstone.arfly.pet.repository.PetRepository;
 import com.capstone.arfly.pet.service.PetService;
@@ -20,8 +21,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.parameters.P;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @Tag(name = "pet", description = "반려동물 API")
 @RestController
@@ -30,6 +34,8 @@ import org.springframework.web.multipart.MultipartFile;
 public class PetController {
 
     private final PetService petService;
+
+
 
     @Operation(
             summary = "반려동물 등록",
@@ -63,11 +69,29 @@ public class PetController {
             @Parameter(schema = @Schema(type = "string", format = "binary"))
             @RequestPart(value="file", required = false) MultipartFile file,
             @Parameter(hidden = true)
-            @AuthenticationPrincipal User user) {
+            @AuthenticationPrincipal UserDetails userDetails) {
 
-        Long memberId = Long.parseLong(user.getUsername());
+        Long memberId = Long.parseLong(userDetails.getUsername());
         petService.createPet(memberId, request, file);
 
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
+
+    @Operation(
+            summary = "품종 목록 조회",
+            description = "선택한 종(DOG 또는 CAT)에 해당하는 품종 이름 목록을 조회합니다."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "품종 목록 조회 성공")
+    })
+    @GetMapping("/breeds")
+    public ResponseEntity<List<String>> getBreeds(
+            @Parameter(description = "동물 종 (DOG 또는 CAT)", required = true)
+            @RequestParam(name = "species") Species species) {
+
+        List<String> breedNames = petService.getBreedsBySpecies(species);
+
+        return ResponseEntity.ok(breedNames);
+    }
+
 }
