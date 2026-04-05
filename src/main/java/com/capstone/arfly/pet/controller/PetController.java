@@ -4,6 +4,7 @@ package com.capstone.arfly.pet.controller;
 import com.capstone.arfly.common.exception.ErrorResponse;
 import com.capstone.arfly.pet.domain.Species;
 import com.capstone.arfly.pet.dto.CreatePetRequest;
+import com.capstone.arfly.pet.dto.PetDetailResponse;
 import com.capstone.arfly.pet.dto.UpdatePetRequest;
 import com.capstone.arfly.pet.repository.PetRepository;
 import com.capstone.arfly.pet.service.PetService;
@@ -123,6 +124,28 @@ public class PetController {
         petService.updatePet(memberId, petId, request, petFile);
 
         return ResponseEntity.noContent().build();
+    }
+
+    @Operation(
+            summary = "반려동물 상세 조회",
+            description = "특정 반려동물의 상세 정보를 조회합니다."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "403", description = "조회 권한 없음 (내 반려동물이 아님)"),
+            @ApiResponse(responseCode = "404", description = "반려동물을 찾을 수 없음")
+    })
+    @GetMapping("/{petId}")
+    public ResponseEntity<PetDetailResponse> getPetDetail(
+            @Parameter(description = "조회할 반려동물의 ID", required = true)
+            @PathVariable Long petId,
+            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
+
+        Long memberId = Long.parseLong(userDetails.getUsername());
+
+        PetDetailResponse response = petService.getPetDetail(memberId, petId);
+
+        return ResponseEntity.ok(response);
     }
 
 

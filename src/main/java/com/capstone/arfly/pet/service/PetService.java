@@ -13,6 +13,7 @@ import com.capstone.arfly.pet.domain.Pet;
 import com.capstone.arfly.pet.domain.PetAllergy;
 import com.capstone.arfly.pet.domain.Species;
 import com.capstone.arfly.pet.dto.CreatePetRequest;
+import com.capstone.arfly.pet.dto.PetDetailResponse;
 import com.capstone.arfly.pet.dto.UpdatePetRequest;
 import com.capstone.arfly.pet.repository.BreedsRepository;
 import com.capstone.arfly.pet.repository.PetAllergyRepository;
@@ -176,6 +177,43 @@ public class PetService {
                 petAllergyRepository.save(petAllergy);
             }
         }
+    }
+
+    // 반려동물 정보 조회
+    @Transactional(readOnly = true)
+    public PetDetailResponse getPetDetail(Long memberId, Long petId) {
+
+        Pet pet = petRepository.findById(petId)
+                .orElseThrow(()-> new BusinessException(ErrorCode.PET_NOT_FOUND));
+
+        if(!pet.getMember().getId().equals(memberId)){
+            throw new BusinessException(ErrorCode.FORBIDDEN);
+        }
+
+        List<String> allergies = petAllergyRepository.findAllByPet(pet).stream()
+                .map(PetAllergy::getName)
+                .toList();
+
+        String profileImageUrl = null;
+        File profileImage = pet.getProfileImage();
+
+        if (profileImage != null && !profileImage.getDeleted()){
+            profileImageUrl = s3Uploader.getPublicUrl(profileImage.getFileKey());
+        }
+
+        return PetDetailResponse.builder()
+                .name(pet.getName())
+                .species(pet.getSpecies())
+                .breed(pet.getBreeds().getName())
+                .sex(pet.getSex())
+                .neutered(pet.getNeutered())
+                .birth(pet.getBirth())
+                .weight(pet.getWeight())
+                .allergies(allergies)
+                .note(pet.getNote())
+                .profileImageUrl(profileImageUrl)
+                .build();
+
 
     }
 
