@@ -23,7 +23,7 @@ public class KakaoService {
     @Value("${oauth.kakao.client-secret}")
     private String kakaoClientSecret;
 
-    // RestClient를 필드로 선언하여 재사용 (Bean 등록 권장)
+
     private final RestClient restClient = RestClient.create();
 
     public KakaoAccessTokenDto getAccessToken(RedirectDto redirectDto) {
