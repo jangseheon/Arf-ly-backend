@@ -1,4 +1,4 @@
-package com.capstone.arfly.member.service;
+package com.capstone.arfly.common.service;
 
 
 import com.capstone.arfly.common.exception.EmptyTokenException;

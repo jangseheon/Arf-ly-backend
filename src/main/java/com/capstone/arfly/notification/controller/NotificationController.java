@@ -1,21 +1,14 @@
 package com.capstone.arfly.notification.controller;
 
-import com.capstone.arfly.common.exception.ErrorResponse;
-import com.capstone.arfly.member.domain.Member;
-import com.capstone.arfly.member.dto.MemberCreateDto;
-import com.capstone.arfly.member.dto.TokenResponseDto;
 import com.capstone.arfly.notification.dto.FcmTokenRequest;
 import com.capstone.arfly.notification.service.NotificationService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;

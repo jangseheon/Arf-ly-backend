@@ -5,7 +5,6 @@ import com.capstone.arfly.member.repository.MemberRepository;
 import com.capstone.arfly.notification.domain.FcmToken;
 import com.capstone.arfly.notification.dto.FcmTokenRequest;
 import com.capstone.arfly.notification.repository.FcmTokenRepository;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

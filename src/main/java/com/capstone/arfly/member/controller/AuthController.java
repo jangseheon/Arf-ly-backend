@@ -24,7 +24,7 @@ import com.capstone.arfly.member.dto.RedirectDto;
 import com.capstone.arfly.member.dto.TokenResponseDto;
 import com.capstone.arfly.member.dto.UserIdResponseDto;
 import com.capstone.arfly.member.service.AuthService;
-import com.capstone.arfly.member.service.FirebaseService;
+import com.capstone.arfly.common.service.FirebaseService;
 import com.capstone.arfly.member.service.GoogleService;
 import com.capstone.arfly.member.service.KakaoService;
 import com.capstone.arfly.member.service.NaverService;

@@ -26,7 +26,7 @@ public class FcmTokenRequest {
     private String fcmToken;
 
     @Schema(
-            description = "접속 기기 환경 (DESKTOP, MOBILE_ANDROID, MOBILE_IOS 만 가능)",
+            description = "접속 기기 환경 (ANDROID, IOS,DESKTOP 만 가능 )",
             example = "DESKTOP",
             requiredMode = Schema.RequiredMode.REQUIRED
     )
