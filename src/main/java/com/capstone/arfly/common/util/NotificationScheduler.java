@@ -26,6 +26,7 @@ public class NotificationScheduler {
     @Transactional
     @Scheduled(cron = "0 * * * * *")
     public void sendScheduledNotifications() {
+        log.info("약 알림 발송 스케줄러 작동");
         // 알림 발송 대상자 조회
         LocalTime now = LocalTime.now();
         LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
@@ -58,6 +59,16 @@ public class NotificationScheduler {
         if(!allMedicationReminderIds.isEmpty()){
             medicationReminderRepository.updateReminderLastSendAt(allMedicationReminderIds, LocalDateTime.now());
         }
+        log.info("약 알림 발송 스케줄러 종료");
+    }
 
+    // 매일 오전 3시에 한달동안 사용하지 않은 Fcm Token 제거
+    @Transactional
+    @Scheduled(cron = "0 0 3 * * *")
+    public void cleanUpInactiveTokens(){
+        log.info("휴먼 FCM 토큰 정리 시작");
+        LocalDateTime oneMonthAgo = LocalDateTime.now().minusMonths(1);
+        fcmTokenRepository.deleteByLastUsedAtBefore(oneMonthAgo);
+        log.info("휴먼 FCM 토큰 정리 완료");
     }
 }
