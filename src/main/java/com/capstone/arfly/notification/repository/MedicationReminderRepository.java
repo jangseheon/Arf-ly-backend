@@ -3,9 +3,12 @@ package com.capstone.arfly.notification.repository;
 import com.capstone.arfly.common.dto.MedicationAlarmDto;
 import com.capstone.arfly.member.domain.Member;
 import com.capstone.arfly.notification.domain.MedicationReminder;
+import com.capstone.arfly.notification.dto.UpdateMedicationReminderRequest;
+import jakarta.validation.Valid;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -45,4 +48,6 @@ public interface MedicationReminderRepository extends JpaRepository<MedicationRe
     void updateReminderLastSendAt(@Param("ids") List<Long> ids, @Param("now")LocalDateTime now);
 
     List<MedicationReminder> findByMemberIdOrderByReminderTimeAsc(Long memberId);
+
+    Optional<MedicationReminder> findByIdAndMemberId(Long alarmId, Long userId);
 }

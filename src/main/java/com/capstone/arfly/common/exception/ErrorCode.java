@@ -28,7 +28,8 @@ public enum ErrorCode {
     FILE_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR,"현재 파일과 관련하여 서버에 문제가 있습니다.","FILE_NOT_FOUND"),
     FILE_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR,"파일 업로드에 실패했습니다.","FILE_UPLOAD_FAILED"),
     INVALID_FILE_TYPE(HttpStatus.BAD_REQUEST,"잘못된 파일 유형입니다.","INVALID_FILE_TYPE"),
-    FILE_TOO_LARGE(HttpStatus.BAD_REQUEST,"파일 용량을 초과했습니다.", "FILE_TOO_LARGE");
+    FILE_TOO_LARGE(HttpStatus.BAD_REQUEST,"파일 용량을 초과했습니다.", "FILE_TOO_LARGE"),
+    MEDICATION_REMINDER_NOT_FOUND(HttpStatus.NOT_FOUND,"요청한 알람은 존재하지 않습니다.", "REMINDER_NOT_FOUND");
 
     //예외 상태 코드
     private final HttpStatus httpStatus;

@@ -44,14 +44,17 @@ public class MedicationReminder extends BaseTimeEntity {
     @Builder.Default
     private LocalDateTime timeUpdatedAt = LocalDateTime.now();
 
-    // 알람 정보 수정
-    public void update(String title, String content, LocalTime newTime) {
+
+    public void updateTitle(String title){
         this.title = title;
+    }
+
+    public void updateContent(String content){
         this.content = content;
-        //알람 정보를 수정하면 활성화 처리
-        this.active = true;
-        if (!this.reminderTime.equals(newTime)) {
-            this.reminderTime = newTime;
+    }
+    public void updateReminderTime(LocalTime reminderTime){
+        if (!this.reminderTime.equals(reminderTime)) {
+            this.reminderTime = reminderTime;
             this.timeUpdatedAt = LocalDateTime.now();
         }
     }
