@@ -38,7 +38,7 @@ public class SecurityConfig {
                         a.requestMatchers("/auth/create","/auth/doLogin","/auth/google/doLogin","/auth/kakao/doLogin","/auth/naver/doLogin"
                                 ,"/auth/refresh","/terms/latest","/member/check-username","/auth/phone/verify"
                                 ,"/auth/token/refresh","/swagger-ui/**","/v3/api-docs/**","/swagger-ui.html","/auth/id/find","/auth/password/verify","/auth/password/reset",
-                                "/oauth2/**").permitAll().anyRequest().authenticated())
+                                "/oauth2/**","/member/check-userId").permitAll().anyRequest().authenticated())
                 .addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
