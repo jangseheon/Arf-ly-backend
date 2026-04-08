@@ -1,6 +1,7 @@
 package com.capstone.arfly.notification.repository;
 
 import com.capstone.arfly.common.dto.MedicationAlarmDto;
+import com.capstone.arfly.member.domain.Member;
 import com.capstone.arfly.notification.domain.MedicationReminder;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -38,4 +39,6 @@ public interface MedicationReminderRepository extends JpaRepository<MedicationRe
     @Modifying(clearAutomatically = true)
     @Query("UPDATE MedicationReminder m SET m.lastSentAt = :now WHERE m.id IN :ids")
     void updateReminderLastSendAt(@Param("ids") List<Long> ids, @Param("now")LocalDateTime now);
+
+    List<MedicationReminder> findByMemberIdOrderByReminderTimeAsc(Long memberId);
 }
