@@ -2,6 +2,8 @@ package com.capstone.arfly.member.controller;
 
 import com.capstone.arfly.common.exception.ErrorResponse;
 import com.capstone.arfly.member.dto.UpdateUserRequest;
+import com.capstone.arfly.member.dto.UserIdCheckRequestDto;
+import com.capstone.arfly.member.dto.UserIdCheckResponseDto;
 import com.capstone.arfly.member.dto.UserNameCheckRequestDto;
 import com.capstone.arfly.member.dto.UserNameCheckResponseDto;
 import com.capstone.arfly.member.dto.UserProfileResponse;
@@ -52,6 +54,34 @@ public class MemberController {
             response = UserNameCheckResponseDto.from(true);
         } else {
             response = UserNameCheckResponseDto.from(false);
+        }
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Operation(
+            summary = "ID 중복 확인",
+            description = "전달받은 ID가 DB에 이미 존재하는지 확인하여 사용 가능 여부를 반환한다."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "조회 성공",
+                    content = @Content(schema = @Schema(implementation = UserIdCheckResponseDto.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "잘못된 요청 (ID 값이 비어있거나 공백인 경우, 유효성 검증에 실패한 경우)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+
+    @PostMapping("/check-userId")
+    public ResponseEntity<?> checkUserIdAvailability(@RequestBody UserIdCheckRequestDto userIdCheckRequestDto) {
+        UserIdCheckResponseDto response;
+        if (memberService.isIdAvailable(userIdCheckRequestDto)) {
+            response = UserIdCheckResponseDto.from(true);
+        } else {
+            response = UserIdCheckResponseDto.from(false);
         }
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

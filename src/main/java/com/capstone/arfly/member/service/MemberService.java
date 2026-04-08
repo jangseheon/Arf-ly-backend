@@ -4,6 +4,7 @@ import com.capstone.arfly.common.exception.BusinessException;
 import com.capstone.arfly.common.exception.ErrorCode;
 import com.capstone.arfly.member.domain.Member;
 import com.capstone.arfly.member.domain.Role;
+import com.capstone.arfly.member.dto.UserIdCheckRequestDto;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import com.capstone.arfly.member.dto.UpdateUserRequest;
 import com.capstone.arfly.member.dto.UserNameCheckRequestDto;
@@ -23,6 +24,14 @@ public class MemberService {
 
     public boolean isUsernameAvailable(UserNameCheckRequestDto userNameCheckRequestDto) {
         Optional<Member> member = memberRepository.findByNickName(userNameCheckRequestDto.getNickname());
+        if(member.isPresent()){
+            return false;
+        }
+        return true;
+    }
+
+    public boolean isIdAvailable(UserIdCheckRequestDto userIdCheckRequestDto) {
+        Optional<Member> member = memberRepository.findByUserId(userIdCheckRequestDto.getUserId());
         if(member.isPresent()){
             return false;
         }
@@ -72,6 +81,7 @@ public class MemberService {
             member.updatePassword(encodedPassword);
         }
     }
+
 
 
 }
