@@ -66,7 +66,7 @@ public class MemberController {
             @ApiResponse(
                     responseCode = "200",
                     description = "조회 성공",
-                    content = @Content(schema = @Schema(implementation = UserIdCheckRequestDto.class))
+                    content = @Content(schema = @Schema(implementation = UserIdCheckResponseDto.class))
             ),
             @ApiResponse(
                     responseCode = "400",
