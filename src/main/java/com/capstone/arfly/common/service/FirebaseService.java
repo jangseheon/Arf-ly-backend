@@ -8,28 +8,33 @@ import com.capstone.arfly.common.exception.MissingTokenException;
 import com.capstone.arfly.common.exception.TokenExpiredException;
 import com.capstone.arfly.common.exception.TokenRevokedException;
 import com.capstone.arfly.member.dto.PhoneAuthInfoDto;
+import com.google.firebase.ErrorCode;
 import com.google.firebase.auth.AuthErrorCode;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
+import com.google.firebase.messaging.BatchResponse;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingException;
 import com.google.firebase.messaging.Message;
 import com.google.firebase.messaging.MessagingErrorCode;
 import com.google.firebase.messaging.Notification;
+import com.google.firebase.messaging.SendResponse;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@Transactional
 @RequiredArgsConstructor
 @Slf4j
 public class FirebaseService {
-    private final FirebaseMessaging messaging;
     private final FirebaseMessaging firebaseMessaging;
 
     //토큰을 검증하고 사용자의 정보를 추출
@@ -58,55 +63,66 @@ public class FirebaseService {
             return PhoneAuthInfoDto.builder().uid(uid).phoneNumber(phoneNumber).build();
 
         } catch (FirebaseAuthException e) {
-            if (e.getAuthErrorCode() == AuthErrorCode.REVOKED_ID_TOKEN) {
-                throw new TokenRevokedException();
-            }
-            if (e.getAuthErrorCode() == AuthErrorCode.EXPIRED_ID_TOKEN) {
-                throw new TokenExpiredException();
-            }
-            if (e.getAuthErrorCode() == AuthErrorCode.INVALID_ID_TOKEN) {
-                throw new InvalidTokenException();
-            }
-            throw new InvalidTokenException();
+            throw switch (e.getAuthErrorCode()) {
+                case REVOKED_ID_TOKEN -> new TokenRevokedException();
+                case EXPIRED_ID_TOKEN -> new TokenExpiredException();
+                case INVALID_ID_TOKEN -> new InvalidTokenException();
+                default -> new InvalidTokenException();
+            };
         }
     }
 
 
     //여러 건의 알림을 리스트로 받아 실제 푸시 알림을 발송
-    public List<Long> sendAllNotifications(List<MedicationAlarmDto> alarmList){
-        List<Long> failedTokenList = new ArrayList<>();
-        for (MedicationAlarmDto alarm : alarmList) {
-            //알람 생성
-            Notification notification = Notification.builder()
-                    .setTitle(alarm.title())
-                    .setBody(alarm.content())
-                    .build();
-            //푸시 알림 메세지 생성
-            Message message = Message.builder().setToken(alarm.token())
-                    .setNotification(notification)
-                    .build();
-            try{
-                firebaseMessaging.send(message);
-                log.info("알림 발송 성공 - Target: {}, Title: {}", alarm.token(), alarm.title());
-            }catch(FirebaseMessagingException e){
-                //사용자가 앱을 삭제 혹은 알림 비활성화 처리 혹은 토큰 만료 시 발생
-                if(e.getMessagingErrorCode() == MessagingErrorCode.UNREGISTERED){
-                    log.error("알림 발송 실패(UNREGISTERED): Token: {}, Title: {}",alarm.token(), alarm.title());
-                    failedTokenList.add(alarm.fcmTokenId());
-                }
-                //토큰 형식이 맞지 않거나 비어있는 경우 해당 예외 발생
-                else if(e.getMessagingErrorCode() == MessagingErrorCode.INVALID_ARGUMENT){
-                    log.error("알림 발송 실패(INVALID_ARGUMENT): Token: {}, Title{}",alarm.token(), alarm.title());
-                    failedTokenList.add(alarm.fcmTokenId());
-                }
-                else{
-                    log.error("알림 발송 실패(FIREBASE_SERVER_ERROR): Token: {}, Title{}",alarm.token(), alarm.title());
-                }
-            }
-
-
+    public Set<Long> sendAllNotifications(List<MedicationAlarmDto> alarmList){
+        if(alarmList == null || alarmList.isEmpty()){
+            return Collections.emptySet();
         }
-        return failedTokenList;
+        //  일괄 전송을 위한 MessageList 생성
+        List<Message> messages = alarmList.stream()
+                .map(alarm -> Message.builder()
+                        .setToken(alarm.token())
+                        .setNotification(Notification.builder()
+                                .setTitle(alarm.title())
+                                .setBody(alarm.content())
+                                .build())
+                        .build())
+                .toList();
+        Set<Long> failedTokenSet = new HashSet<>();
+        try{
+            // 일괄 전송
+            BatchResponse response = firebaseMessaging.sendEach(messages);
+
+            //발송 결과 처리
+            for(int i =0; i<response.getResponses().size();i++){
+                SendResponse sendResponse = response.getResponses().get(i);
+                MedicationAlarmDto alarm = alarmList.get(i);
+
+                if(sendResponse.isSuccessful()){
+                    log.debug("알림 발송 성공 - Target: {}, Title:{}",alarm.token(),alarm.title());
+                }//실패한 경우 Set에 추가
+                else{
+                    FirebaseMessagingException exception = sendResponse.getException();
+                    MessagingErrorCode errorCode = exception.getMessagingErrorCode();
+                    if(errorCode == MessagingErrorCode.UNREGISTERED || errorCode == MessagingErrorCode.INVALID_ARGUMENT){
+                        log.warn("알림 발송 실패 - ErrorCode:{}, Target: {}, Title:{}",errorCode,alarm.token(),alarm.title());
+                        failedTokenSet.add(alarm.fcmTokenId());
+                    }
+                    else{// 네트워크 문제 혹은 파이어베이스 서버 임시 점검인 경우
+                        log.error("알림 발송 실패(SERVER_ERROR): Token: {}, Title: {}", alarm.token(), alarm.title(), exception);
+                        failedTokenSet.add(alarm.fcmTokenId());
+                    }
+                }
+
+
+            }
+            //일괄 전송 실패 시 모든 FCM Token 반납
+        }catch (FirebaseMessagingException e){
+            log.error("FCM 일괄 발송 중 에러 발생",e);
+            return alarmList.stream().map(MedicationAlarmDto::fcmTokenId).collect(Collectors.toSet());
+        }
+
+        return  failedTokenSet;
     }
 
 
