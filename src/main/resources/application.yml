@@ -58,4 +58,8 @@ oauth:
     client_id: ${NAVER_CLIENT_ID}
     client-secret: ${NAVER_SECRET}
 
+app:
+  user:
+    id: ${TEST_USER_ID}
+    password: ${TEST_USER_PASSWORD}
 
