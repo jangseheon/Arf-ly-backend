@@ -28,6 +28,6 @@ public class HospitalListResponse {
     @Schema(description = "오픈 여부", example = "true")
     public boolean opened;
 
-    @Schema(description = "병원 사진 주소", example = "/api/v1/hospitals/photo?name=places/ChIJNx.../photos/AUQs...&h=400")
+    @Schema(description = "병원 사진 주소", example = "/api/v1/hospitals/photo?name=places/ChIJNx.../photos/AUQs...")
     public String imageUrl;
 }
