@@ -2,6 +2,7 @@ package com.capstone.arfly.hospital.service;
 
 import com.capstone.arfly.common.exception.BusinessException;
 import com.capstone.arfly.common.exception.ErrorCode;
+import com.capstone.arfly.hospital.dto.HospitalDetailResponse;
 import com.capstone.arfly.hospital.dto.HospitalListResponse;
 import com.capstone.arfly.member.domain.Member;
 import com.capstone.arfly.member.repository.MemberRepository;
@@ -72,12 +73,8 @@ public class HospitalService {
         memberRepository.findById(userId).orElseThrow(()->new BusinessException(ErrorCode.USER_NOT_EXISTS));
 
         try {
-            GetPhotoMediaRequest request = GetPhotoMediaRequest.newBuilder()
-                    .setName(photoName)
-                    .setMaxHeightPx(maxHeight)
-                    .build();
+            PhotoMedia photo = response(photoName, maxHeight);
 
-            PhotoMedia photo = placesClient.getPhotoMedia(request);
             String uri = photo.getPhotoUri();
 
             RestTemplate restTemplate = new RestTemplate();
@@ -113,6 +110,15 @@ public class HospitalService {
                 .build();
 
         return placesClient.searchNearby(request);
+    }
+
+    public PhotoMedia response(String photoName, Integer maxHeight) {
+        GetPhotoMediaRequest request = GetPhotoMediaRequest.newBuilder()
+                .setName(photoName)
+                .setMaxHeightPx(maxHeight)
+                .build();
+
+        return placesClient.getPhotoMedia(request);
     }
 
 }
