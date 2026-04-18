@@ -51,6 +51,9 @@ dependencies {
     implementation 'com.google.guava:guava:33.0.0-jre'
 
     implementation 'com.google.maps:google-maps-places:0.59.0'
+
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
 }
 
 tasks.named('test') {
