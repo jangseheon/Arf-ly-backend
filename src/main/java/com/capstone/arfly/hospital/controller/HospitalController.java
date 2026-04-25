@@ -1,6 +1,7 @@
 package com.capstone.arfly.hospital.controller;
 
 import com.capstone.arfly.common.exception.ErrorResponse;
+import com.capstone.arfly.hospital.dto.HospitalDetailResponse;
 import com.capstone.arfly.hospital.dto.HospitalListResponse;
 import com.capstone.arfly.hospital.service.HospitalService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -21,10 +22,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -108,5 +106,34 @@ public class HospitalController {
         return ResponseEntity.ok()
                 .contentType(MediaType.IMAGE_JPEG)
                 .body(imageBytes);
+    }
+
+    @Operation(summary = "병원 상세정보 조회", description = "동불병원의 상세정보를 가져온다")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "병원 상세정보 가져오기 성공"),
+            @ApiResponse(responseCode = "500", description = "구글 api 문제",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "400", description = "잘못된 placesId",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "인증되지 않은 사용자",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "존재하지 않는 회원",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    @GetMapping("/maps/{placesId}")
+    public ResponseEntity<HospitalDetailResponse> getHospitalDetails(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @Parameter(description = "지도 리스트 응답에 있는 id입니다.", example = "ChIJCbxn16IOZjURfh9ULhjaA2s")
+            @PathVariable String placesId
+    ){
+        Long userId = Long.parseLong(userDetails.getUsername());
+
+        return ResponseEntity.ok(hospitalService.getHospitalDetail(userId, placesId));
     }
 }

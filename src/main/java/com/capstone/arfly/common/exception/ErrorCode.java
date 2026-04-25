@@ -32,7 +32,8 @@ public enum ErrorCode {
     MEDICATION_REMINDER_NOT_FOUND(HttpStatus.NOT_FOUND,"요청한 알람은 존재하지 않습니다.", "REMINDER_NOT_FOUND"),
 
     GOOGLE_MAP_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "구글 맵 api를 실행하는 도중 오류가 발생했습니다.", "GOOGLE_MAP_ERROR"),
-    MAP_PHOTO_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "구글 맵 api으로 사진을 가져오는 도중 오류가 발생했습니다.", "MAP_PHOTO_ERROR");
+    MAP_PHOTO_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "구글 맵 api으로 사진을 가져오는 도중 오류가 발생했습니다.", "MAP_PHOTO_ERROR"),
+    INVALID_PLACES_ID(HttpStatus.BAD_REQUEST, "잘못된 placesId입니다.","INVALID_PLACES_ID");
 
     //예외 상태 코드
     private final HttpStatus httpStatus;

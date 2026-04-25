@@ -6,6 +6,8 @@ import com.capstone.arfly.hospital.dto.HospitalDetailResponse;
 import com.capstone.arfly.hospital.dto.HospitalListResponse;
 import com.capstone.arfly.member.domain.Member;
 import com.capstone.arfly.member.repository.MemberRepository;
+import com.google.api.gax.rpc.ApiException;
+import com.google.api.gax.rpc.StatusCode;
 import com.google.maps.places.v1.*;
 import com.google.type.LatLng;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +17,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 
@@ -73,7 +76,7 @@ public class HospitalService {
         memberRepository.findById(userId).orElseThrow(()->new BusinessException(ErrorCode.USER_NOT_EXISTS));
 
         try {
-            PhotoMedia photo = response(photoName, maxHeight);
+            PhotoMedia photo = getPhotoResponse(photoName, maxHeight);
 
             String uri = photo.getPhotoUri();
 
@@ -88,6 +91,57 @@ public class HospitalService {
         } catch (Exception e){
             log.error("구글 사진 로드 중 오류 발생. photoName: {}, 원인: {}", photoName, e.getMessage());
             throw new BusinessException(ErrorCode.MAP_PHOTO_ERROR);
+        }
+    }
+
+    // 병원 상세정보 가져오기
+    public HospitalDetailResponse getHospitalDetail(Long userId, String placesId){
+        memberRepository.findById(userId).orElseThrow(()->new BusinessException(ErrorCode.USER_NOT_EXISTS));
+
+        try{
+            Place response = getPlaceDetailResponse(placesId);
+
+            List<String> imageUrls = new ArrayList<>();
+
+            // 사진 없으면 response 안함, 최대 5개
+            if (response.getPhotosCount() > 0) {
+                int photoCount = Math.min(5, response.getPhotosCount());
+
+                for(int i = 0; i < photoCount; i++) {
+                    String photoName = response.getPhotos(i).getName();
+                    imageUrls.add("/api/v1/hospitals/photo?name=" + photoName);
+                }
+            }
+
+            // 구글맵에 영업시간이 없으면 빈 리스트
+            List<String> operatingHours = response.hasRegularOpeningHours()
+                    ? response.getRegularOpeningHours().getWeekdayDescriptionsList()
+                    : Collections.emptyList();
+
+            HospitalDetailResponse hospitalDto = HospitalDetailResponse.builder()
+                    .id(response.getId())
+                    .hospitalName(response.getDisplayName().getText())
+                    .roadAddress(response.getShortFormattedAddress())
+                    .operating(operatingHours)
+                    .opened(response.hasRegularOpeningHours() && response.getRegularOpeningHours().getOpenNow())
+                    .imageUrl(imageUrls)
+                    .build();
+
+            return hospitalDto;
+        }catch (ApiException e) {
+            log.error("데이터 조회 중 에러 발생: ", e);
+
+            // 잘못된 인자 or placesId 조회가 결과가 없을 때
+            if (e.getStatusCode().getCode().equals(StatusCode.Code.INVALID_ARGUMENT) ||
+                    e.getStatusCode().getCode().equals(StatusCode.Code.NOT_FOUND)) {
+                throw new BusinessException(ErrorCode.INVALID_PLACES_ID); // 400 Error
+            }
+
+            throw new BusinessException(ErrorCode.GOOGLE_MAP_ERROR);
+        }catch (Exception e) {
+            // 그 외 런타임 에러 처리
+            log.error("병원 상세 정보 처리 중 예상치 못한 에러: ", e);
+            throw new BusinessException(ErrorCode.GOOGLE_MAP_ERROR);
         }
     }
 
@@ -112,13 +166,23 @@ public class HospitalService {
         return placesClient.searchNearby(request);
     }
 
-    public PhotoMedia response(String photoName, Integer maxHeight) {
+    public PhotoMedia getPhotoResponse(String photoName, Integer maxHeight) {
         GetPhotoMediaRequest request = GetPhotoMediaRequest.newBuilder()
                 .setName(photoName)
                 .setMaxHeightPx(maxHeight)
                 .build();
 
         return placesClient.getPhotoMedia(request);
+    }
+
+    public Place getPlaceDetailResponse(String placeId) {
+
+        GetPlaceRequest request = GetPlaceRequest.newBuilder()
+                .setName("places/" + placeId)
+                .setLanguageCode("ko")
+                .build();
+
+        return placesClient.getPlace(request);
     }
 
 }

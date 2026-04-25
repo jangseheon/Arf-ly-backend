@@ -20,8 +20,24 @@ public class GoogleMapConfig {
 
     @Bean(destroyMethod = "close")
     public PlacesClient placesClient() throws IOException {
-        // 필드 마스크 설정(장소 id, 병원 이름, 병원 위치, 도로명주소, 사진, 오픈시간)
-        String fieldMask = "places.id,places.displayName,places.location,places.shortFormattedAddress,places.photos,places.regularOpeningHours";
+        // 필드 마스크 설정(Place Details, Nearby Search 따로)
+        // Place Details
+        String detailFields = "id," +
+                "displayName," +
+                "shortFormattedAddress," +
+                "photos," +
+                "regularOpeningHours," +
+                "nationalPhoneNumber";
+
+        // Nearby Search
+        String searchFields = "places.id," +
+                "places.displayName," +
+                "places.location," +
+                "places.shortFormattedAddress," +
+                "places.photos," +
+                "places.regularOpeningHours";
+
+        String fieldMask = detailFields + "," + searchFields;
 
         PlacesSettings settings = null;
 
