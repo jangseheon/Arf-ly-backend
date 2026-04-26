@@ -4,6 +4,7 @@ import com.capstone.arfly.notification.domain.FcmToken;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -21,4 +22,15 @@ public interface FcmTokenRepository extends JpaRepository<FcmToken, Long> {
 
     @Modifying
     void deleteByLastUsedAtBefore(LocalDateTime threshold);
+
+
+    @Query("""
+                SELECT f\s
+                FROM FcmToken f
+                JOIN f.member mem\s
+                WHERE mem.id IN :mentionIds\s
+                AND mem.notificationEnabled = TRUE
+            """)
+    List<FcmToken> findByMemberIdAndNotificationEnabled(
+            @Param("mentionIds") Set<Long> mentionedIds);
 }

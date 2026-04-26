@@ -7,6 +7,7 @@ import com.capstone.arfly.community.domain.Comment;
 import com.capstone.arfly.community.domain.CommentMention;
 import com.capstone.arfly.community.domain.Post;
 import com.capstone.arfly.community.dto.CommentRequestDto;
+import com.capstone.arfly.community.event.CommentCreatedEvent;
 import com.capstone.arfly.community.repository.CommentMentionRepository;
 import com.capstone.arfly.community.repository.CommentRepository;
 import com.capstone.arfly.community.repository.PostRepository;
@@ -18,6 +19,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,12 +30,13 @@ public class PostService {
     private final MemberRepository memberRepository;
     private final CommentRepository commentRepository;
     private final CommentMentionRepository commentMentionRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public void createComment(Long postId, long userId, CommentRequestDto requestDto) {
         //게시물 존재 여부 확인
         Post post = postRepository.findById(postId).orElseThrow(PostNotFoundException::new);
-        Member member = memberRepository.getReferenceById(userId);
+        Member commenter = memberRepository.getReferenceById(userId);
         Set<Long> mentionIds = requestDto.getMentionedUserIds();
         boolean hasMentions = mentionIds != null && !mentionIds.isEmpty();
 
@@ -41,7 +44,7 @@ public class PostService {
         //내용 내 id 목록과 mentionIdList 일치 여부 확인
         validateContentMentions(requestDto.getContent(), mentionIds);
 
-        Comment newComment = Comment.builder().post(post).member(member).content(requestDto.getContent()).build();
+        Comment newComment = Comment.builder().post(post).member(commenter).content(requestDto.getContent()).build();
         commentRepository.save(newComment);
 
         //metionUserIds에 존재하는 id가 존재하는지 여부 확인
@@ -59,6 +62,10 @@ public class PostService {
                             .build())
                     .toList();
             commentMentionRepository.saveAll(commentMentionList);
+
+            //푸시 알람을 위한 Event 생성
+            eventPublisher.publishEvent(new CommentCreatedEvent(this,
+                    post,commenter,newComment,mentionIds));
         }
     }
 

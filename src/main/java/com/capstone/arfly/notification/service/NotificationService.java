@@ -8,6 +8,7 @@ import com.capstone.arfly.notification.repository.FcmTokenRepository;
 import com.capstone.arfly.notification.repository.MedicationReminderRepository;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -59,5 +60,12 @@ public class NotificationService {
             fcmTokenRepository.deleteAllByIdInBatch(failedFcmTokenIds);
         }
 
+    }
+
+    public void updateCommentResults(List<Long> successFcmTokenIds,Set<Long> failedFcmTokenIds) {
+        if(!successFcmTokenIds.isEmpty()){
+            fcmTokenRepository.updateTokenLastUsedAt(successFcmTokenIds,LocalDateTime.now());
+        }
+        fcmTokenRepository.deleteAllById(failedFcmTokenIds);
     }
 }

@@ -7,9 +7,10 @@ import com.capstone.arfly.common.exception.InvalidTokenException;
 import com.capstone.arfly.common.exception.MissingTokenException;
 import com.capstone.arfly.common.exception.TokenExpiredException;
 import com.capstone.arfly.common.exception.TokenRevokedException;
+import com.capstone.arfly.community.domain.Post;
+import com.capstone.arfly.member.domain.Member;
 import com.capstone.arfly.member.dto.PhoneAuthInfoDto;
-import com.google.firebase.ErrorCode;
-import com.google.firebase.auth.AuthErrorCode;
+import com.capstone.arfly.notification.domain.FcmToken;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
@@ -20,7 +21,6 @@ import com.google.firebase.messaging.Message;
 import com.google.firebase.messaging.MessagingErrorCode;
 import com.google.firebase.messaging.Notification;
 import com.google.firebase.messaging.SendResponse;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -29,7 +29,6 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -125,5 +124,53 @@ public class FirebaseService {
         return  failedTokenSet;
     }
 
+    // 댓글에서 언급 기능을 통해 실제 푸시 알람을 발송
+    public Set<Long> sendAllMentionNotifications(Post post, Member commenter, List<FcmToken> fcmTokens){
+        //  일괄 전송을 위한 MessageList 생성
+        List<Message> messages = fcmTokens.stream()
+                .map(token -> Message.builder()
+                        .setToken(token.getToken())
+                        .setNotification(Notification.builder()
+                                .setTitle(post.getTitle())
+                                .setBody(commenter.getNickName() + "님이 당신을 언급했습니다.")
+                                .build())
+                        .build())
+                .collect(Collectors.toList());
+        Set<Long> failedTokenSet = new HashSet<>();
+        try{
+            // 일괄 전송
+            BatchResponse response = firebaseMessaging.sendEach(messages);
+
+            //발송 결과 처리
+            for(int i =0; i<response.getResponses().size();i++){
+                SendResponse sendResponse = response.getResponses().get(i);
+                FcmToken token = fcmTokens.get(i);
+                if(sendResponse.isSuccessful()){
+                    log.debug("댓글 푸시 알람 발송 성공 - Target: {}",token.getToken());
+                }//실패한 경우 Set에 추가
+                else{
+                    FirebaseMessagingException exception = sendResponse.getException();
+                    MessagingErrorCode errorCode = exception.getMessagingErrorCode();
+                    String errorMessage = exception.getMessage();
+
+                    if (errorCode == MessagingErrorCode.UNREGISTERED || errorCode == MessagingErrorCode.INVALID_ARGUMENT) {
+                        log.warn("알림 발송 실패 - ErrorCode:{}, Token: {}, Error: {}", errorCode, token.getToken(), errorMessage);
+                        failedTokenSet.add(token.getId());
+                    } else {
+                        log.error("알림 발송 실패(SERVER_ERROR): Token: {}, Error: {}", token.getToken(), errorMessage);
+                        failedTokenSet.add(token.getId());
+                    }
+                }
+
+
+            }
+            //일괄 전송 실패 시 모든 FCM Token 반납
+        }catch (FirebaseMessagingException e){
+            log.error("FCM 일괄 발송 중 에러 발생",e);
+            return fcmTokens.stream().map(FcmToken::getId).collect(Collectors.toSet());
+        }
+
+        return  failedTokenSet;
+    }
 
 }
