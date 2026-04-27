@@ -32,6 +32,7 @@ import java.util.stream.Collectors;
 import javax.naming.AuthenticationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -65,7 +66,11 @@ public class AuthService {
                 .firebaseUid(firebaseUid)
                 .phoneNumber(phoneNumber)
                 .build();
-        memberRepository.save(member);
+        try{
+            memberRepository.saveAndFlush(member);
+        }catch (DataIntegrityViolationException e){
+            throw new UserAlreadyExistsException();
+        }
 
         // 약관 동의 처리
         List<UserAgreementDto> userAgreementDtoList = memberCreateDto.getUserAgreements();

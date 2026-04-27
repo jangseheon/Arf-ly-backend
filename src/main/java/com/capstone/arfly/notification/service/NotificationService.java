@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,22 +27,30 @@ public class NotificationService {
         Member member = memberRepository.getReferenceById(userId);
 
         // 토큰 존재 여부 확인 및 처리
-        fcmTokenRepository.findByToken(fcmTokenRequest.getFcmToken())
-                .ifPresentOrElse(
-                        existingToken -> {
-                            // 기존 토큰이 있다면 주인만 최신화
-                            existingToken.updateMember(member);
-                        },
-                        () -> {
-                            // 신규 토큰이라면 저장
-                            FcmToken newToken = FcmToken.builder()
-                                    .member(member)
-                                    .token(fcmTokenRequest.getFcmToken())
-                                    .deviceType(fcmTokenRequest.getDeviceType())
-                                    .build();
-                            fcmTokenRepository.save(newToken);
-                        }
-                );
+        try {
+            fcmTokenRepository.findByToken(fcmTokenRequest.getFcmToken())
+                    .ifPresentOrElse(
+                            existingToken -> {
+                                // 기존 토큰이 있다면 주인만 최신화
+                                existingToken.updateMember(member);
+                            },
+                            () -> {
+                                // 신규 토큰이라면 저장
+                                FcmToken newToken = FcmToken.builder()
+                                        .member(member)
+                                        .token(fcmTokenRequest.getFcmToken())
+                                        .deviceType(fcmTokenRequest.getDeviceType())
+                                        .build();
+                                fcmTokenRepository.saveAndFlush(newToken);
+
+                            }
+                    );
+        } catch(DataIntegrityViolationException e){
+            fcmTokenRepository.findByToken(fcmTokenRequest.getFcmToken())
+                    .ifPresent(existingToken -> {
+                        existingToken.updateMember(member);
+                    });
+        }
     }
 
     //알람 발송 후 토큰 업데이트 및 알람 업데이트

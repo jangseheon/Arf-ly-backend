@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -27,9 +28,16 @@ public class NotificationScheduler {
     private final FcmTokenRepository fcmTokenRepository;
     private final NotificationService notificationService;
 
+    private final AtomicBoolean isProcessing = new AtomicBoolean(false);
+
     //매 분 0초마다 알림 대상을 수집하여 알림을 발송
     @Scheduled(cron = "0 * * * * *")
     public void sendScheduledNotifications() {
+        if(!isProcessing.compareAndSet(false, true)){
+            log.warn("이전 알림 발송 작업이 완료되지 않아 이번 작업을 건너뜁니다.");
+            return;
+        }
+
         log.info("약 알림 발송 스케줄러 작동");
         LocalTime now = LocalTime.now();
         LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
@@ -67,6 +75,8 @@ public class NotificationScheduler {
 
         }
         log.info("약 알림 발송 스케줄러 종료");
+        isProcessing.set(false);
+
     }
 
     // 매일 오전 3시에 한달동안 사용하지 않은 Fcm Token 제거
