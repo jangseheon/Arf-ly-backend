@@ -399,7 +399,7 @@ public class AuthController {
             )
     })
     @PostMapping("/password/reset")
-    public ResponseEntity<?> resetPassword(@RequestBody PasswordResetRequestDto passwordResetRequestDto) {
+    public ResponseEntity<?> resetPassword(@RequestBody @Valid PasswordResetRequestDto passwordResetRequestDto) {
         //토큰 검증 및 사용자 추출
         Long id = jwtTokenUtil.validatePasswordResetToken(passwordResetRequestDto.getPasswordResetToken());
         //패스워드 변경

@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -48,7 +49,7 @@ public class MemberController {
     })
 
     @PostMapping("/check-username")
-    public ResponseEntity<?> checkUsernameAvailability(@RequestBody UserNameCheckRequestDto userNameCheckRequestDto) {
+    public ResponseEntity<?> checkUsernameAvailability(@RequestBody @Valid UserNameCheckRequestDto userNameCheckRequestDto) {
         UserNameCheckResponseDto response;
         if (memberService.isUsernameAvailable(userNameCheckRequestDto)) {
             response = UserNameCheckResponseDto.from(true);
@@ -76,7 +77,7 @@ public class MemberController {
     })
 
     @PostMapping("/check-userId")
-    public ResponseEntity<?> checkUserIdAvailability(@RequestBody UserIdCheckRequestDto userIdCheckRequestDto) {
+    public ResponseEntity<?> checkUserIdAvailability(@RequestBody @Valid UserIdCheckRequestDto userIdCheckRequestDto) {
         UserIdCheckResponseDto response;
         if (memberService.isIdAvailable(userIdCheckRequestDto)) {
             response = UserIdCheckResponseDto.from(true);
