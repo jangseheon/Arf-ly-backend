@@ -1,25 +1,50 @@
 package com.capstone.arfly.community.controller;
 
 import com.capstone.arfly.community.dto.CommentRequestDto;
+import com.capstone.arfly.community.dto.PostCreateRequestDto;
 import com.capstone.arfly.community.dto.PostDetailResponseDto;
 import com.capstone.arfly.community.service.PostService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/posts")
 public class PostController {
     private final PostService postService;
+
+    @Operation(
+            summary = "게시글 작성",
+            description = "새로운 게시글을 작성합니다. 제목, 본문, 그리고 다중 파일(이미지/동영상) 업로드를 지원합니다."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "게시글 작성 성공"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터"),
+            @ApiResponse(responseCode = "401", description = "인증 실패 (토큰 만료 혹은 유효하지 않은 토큰)"),
+            @ApiResponse(responseCode = "500", description = "서버 ERROR(EX.S3 Upload 과정 중 오류 발생)")
+    })
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> createPost(
+            @Valid @RequestPart("request") PostCreateRequestDto requestDto,
+            @RequestPart(value = "files", required = false) List<MultipartFile> files,
+            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
+        long userId = Long.parseLong(userDetails.getUsername());
+        postService.createPost(userId, requestDto, files);
+        return new ResponseEntity<>(HttpStatus.CREATED);
+    }
 
     @Operation(
             summary = "게시글 상세 조회",
