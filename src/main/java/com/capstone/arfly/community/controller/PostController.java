@@ -85,4 +85,22 @@ public class PostController {
         postService.createComment(postId, userId, requestDto);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
+
+    @Operation(
+            summary = "게시글 좋아요",
+            description = "특정 게시글에 좋아요를 누르거나 취소합니다. (토글 방식)"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "좋아요 처리 성공"),
+            @ApiResponse(responseCode = "401", description = "인증 실패 (토큰 만료 혹은 유효하지 않은 토큰)"),
+            @ApiResponse(responseCode = "404", description = "게시글을 찾을 수 없음")
+    })
+    @PostMapping("/{postId}/likes")
+    public ResponseEntity<?> toggleLike(
+            @PathVariable Long postId,
+            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
+        long userId = Long.parseLong(userDetails.getUsername());
+        postService.toggleLike(postId, userId);
+        return ResponseEntity.ok().build();
+    }
 }

@@ -1,29 +1,27 @@
 package com.capstone.arfly.community.service;
 
 import com.capstone.arfly.common.constant.S3DIRNAME;
-import com.capstone.arfly.common.domain.File;
 import com.capstone.arfly.common.dto.FileDetailDto;
 import com.capstone.arfly.common.exception.InvalidMentionException;
 import com.capstone.arfly.common.exception.PostNotFoundException;
 import com.capstone.arfly.common.exception.UserNotExistsException;
-import com.capstone.arfly.common.repository.FileRepository;
 import com.capstone.arfly.common.util.S3Uploader;
+import com.capstone.arfly.community.constant.LikeEventType;
 import com.capstone.arfly.community.domain.Comment;
 import com.capstone.arfly.community.domain.CommentMention;
 import com.capstone.arfly.community.domain.Post;
-import com.capstone.arfly.community.domain.PostImage;
 import com.capstone.arfly.community.dto.CommentDetailResponseDto;
 import com.capstone.arfly.community.dto.CommentRequestDto;
 import com.capstone.arfly.community.dto.PostCreateRequestDto;
 import com.capstone.arfly.community.dto.PostDetailResponseDto;
 import com.capstone.arfly.community.event.CommentCreatedEvent;
+import com.capstone.arfly.community.event.PostLikeEvent;
 import com.capstone.arfly.community.repository.CommentMentionRepository;
 import com.capstone.arfly.community.repository.CommentRepository;
 import com.capstone.arfly.community.repository.PostImageRepository;
 import com.capstone.arfly.community.repository.PostRepository;
 import com.capstone.arfly.member.domain.Member;
 import com.capstone.arfly.member.repository.MemberRepository;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -31,6 +29,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -45,8 +44,9 @@ public class PostService {
     private final ApplicationEventPublisher eventPublisher;
     private final PostImageRepository postImageRepository;
     private final S3Uploader s3Uploader;
-    private final FileRepository fileRepository;
     private final PostWriter postWriter;
+    private final RedisTemplate<String, String> redisTemplate;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     @Transactional
     public void createComment(Long postId, long userId, CommentRequestDto requestDto) {
@@ -141,6 +141,24 @@ public class PostService {
     }
 
 
+    public void toggleLike(Long postId, long userId) {
+        Post post = postRepository.findById(postId).orElseThrow(PostNotFoundException::new);
+        String countKey = "post:like:"+postId;
+        String userSetKey = "post:like:users:"+postId;
+
+        Long added = redisTemplate.opsForSet()
+                .add(userSetKey, String.valueOf(userId));
+
+        //이미 좋아요를 누른 경우 -> 취소 처리 필요
+        if(added == 0){
+            redisTemplate.opsForSet().remove(userSetKey,String.valueOf(userId));
+            redisTemplate.opsForValue().decrement(countKey);
+            applicationEventPublisher.publishEvent(new PostLikeEvent(this,postId,userId, LikeEventType.CANCEL));
+            return;
+        }
+        redisTemplate.opsForValue().increment(countKey);
+        applicationEventPublisher.publishEvent(new PostLikeEvent(this,postId,userId,LikeEventType.LIKE));
+    }
 }
 
 
