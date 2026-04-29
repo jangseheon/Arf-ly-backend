@@ -41,3 +41,5 @@ out/
 .application-test.yml
 
 src/main/resources/firebase/firebase-admin-key.json
+
+CLAUDE.md
