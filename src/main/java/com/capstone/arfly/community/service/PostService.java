@@ -15,6 +15,7 @@ import com.capstone.arfly.community.domain.Post;
 import com.capstone.arfly.community.dto.CommentDetailResponseDto;
 import com.capstone.arfly.community.dto.CommentRequestDto;
 import com.capstone.arfly.community.dto.PostCreateRequestDto;
+import com.capstone.arfly.community.dto.PostDetailFileDto;
 import com.capstone.arfly.community.dto.PostDetailResponseDto;
 import com.capstone.arfly.community.event.CommentCreatedEvent;
 import com.capstone.arfly.community.event.PostLikeEvent;
@@ -109,7 +110,7 @@ public class PostService {
         Post post = postRepository.findById(postId).orElseThrow(PostNotFoundException::new);
         List<CommentDetailResponseDto> commentList = commentRepository.findCommentsWithAuthorByPostId(
                 post.getId());
-        List<String> fileList = postImageRepository.findFilePathsByPostId(post.getId());
+        List<PostDetailFileDto> fileList = postImageRepository.findPostDetailFileByPostId(post.getId());
 
         PostDetailResponseDto response = PostDetailResponseDto.makePostDetailResponse(post, commentList,
                 fileList);

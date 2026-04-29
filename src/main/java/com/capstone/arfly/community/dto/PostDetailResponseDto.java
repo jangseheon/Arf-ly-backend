@@ -1,5 +1,6 @@
 package com.capstone.arfly.community.dto;
 
+import com.capstone.arfly.common.dto.FileDetailDto;
 import com.capstone.arfly.community.domain.Post;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
@@ -30,8 +31,8 @@ public class PostDetailResponseDto {
     @Schema(description = "게시글 생성일")
     private LocalDateTime createdAt;
 
-    @Schema(description = "이미지 URL 목록")
-    private List<String> imageUrls;
+    @Schema(description = "게시물 이미지 목록")
+    private List<PostDetailFileDto> images;
 
     @Schema(description = "댓글 목록")
     private List<CommentDetailResponseDto> comments;
@@ -41,10 +42,10 @@ public class PostDetailResponseDto {
 
 
     public static PostDetailResponseDto makePostDetailResponse(Post post, List<CommentDetailResponseDto>
-                                                        comments, List<String> files){
+                                                        comments, List<PostDetailFileDto> files){
         return PostDetailResponseDto.builder()
                 .id(post.getId()).authorNickname(post.getMember().getNickName()
                 ).title(post.getTitle()).content(post.getContent()).likeCount(post.getLike_count())
-                .createdAt(post.getCreatedAt()).imageUrls(files).comments(comments).build();
+                .createdAt(post.getCreatedAt()).images(files).comments(comments).build();
     }
 }
