@@ -23,7 +23,7 @@ public class PostLikeEventHandler {
 
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void handlePostLikeEvent(PostLikeEvent  postLikeEvent){
+    public void  handlePostLikeEvent(PostLikeEvent  postLikeEvent){
         Optional<Post> optionalPost = postRepository.findById(postLikeEvent.getPostId());
         if(optionalPost.isEmpty()){
             return;
