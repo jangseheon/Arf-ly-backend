@@ -40,7 +40,7 @@ public class Post extends BaseTimeEntity {
 
     @Column(nullable = false)
     @Builder.Default
-    private Integer like_count = 0;
+    private Integer likeCount = 0;
 
 
     public void updatePost(String newTitle, String newContent) {

@@ -42,7 +42,13 @@ public class PetController {
 
     @Operation(
             summary = "반려동물 등록",
-            description = "새로운 반려동물의 정보(JSON)와 프로필 사진(File)을 함께 등록합니다. 헤더에 JWT Access 토큰이 필수입니다."
+            description = "새로운 반려동물의 정보(JSON)와 프로필 사진(File)을 함께 등록합니다. 헤더에 JWT Access 토큰이 필수입니다.",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            content = @Content(
+                    mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
+                    encoding = @Encoding(name = "request", contentType = MediaType.APPLICATION_JSON_VALUE)
+            )
+    )
     )
     @ApiResponses(value = {
             @ApiResponse(
@@ -99,7 +105,13 @@ public class PetController {
 
     @Operation(
             summary = "반려동물 정보 수정",
-            description = "기존 반려동물의 정보를 수정합니다. 사진과 정보(JSON)를 함께 보냅니다."
+            description = "기존 반려동물의 정보를 수정합니다. 사진과 정보(JSON)를 함께 보냅니다.",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    content = @Content(
+                            mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
+                            encoding = @Encoding(name = "request", contentType = MediaType.APPLICATION_JSON_VALUE)
+                    )
+            )
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "반려동물 수정 성공 (본문 없음)"),

@@ -2,23 +2,17 @@ package com.capstone.arfly.community.service;
 
 import com.capstone.arfly.common.constant.S3DIRNAME;
 import com.capstone.arfly.common.domain.File;
+import com.capstone.arfly.common.domain.FileType;
 import com.capstone.arfly.common.dto.FileDetailDto;
-import com.capstone.arfly.common.exception.InvalidMentionException;
-import com.capstone.arfly.common.exception.PostAuthorMisMatchException;
-import com.capstone.arfly.common.exception.PostNotFoundException;
-import com.capstone.arfly.common.exception.UserNotExistsException;
+import com.capstone.arfly.common.exception.*;
 import com.capstone.arfly.common.repository.FileRepository;
 import com.capstone.arfly.common.util.S3Uploader;
 import com.capstone.arfly.community.constant.LikeEventType;
 import com.capstone.arfly.community.domain.Comment;
 import com.capstone.arfly.community.domain.CommentMention;
 import com.capstone.arfly.community.domain.Post;
-import com.capstone.arfly.community.dto.CommentDetailResponseDto;
-import com.capstone.arfly.community.dto.CommentRequestDto;
-import com.capstone.arfly.community.dto.PostCreateRequestDto;
-import com.capstone.arfly.community.dto.PostDetailFileDto;
-import com.capstone.arfly.community.dto.PostDetailResponseDto;
-import com.capstone.arfly.community.dto.PostUpdateRequestDto;
+import com.capstone.arfly.community.domain.PostImage;
+import com.capstone.arfly.community.dto.*;
 import com.capstone.arfly.community.event.CommentCreatedEvent;
 import com.capstone.arfly.community.event.PostLikeEvent;
 import com.capstone.arfly.community.repository.CommentMentionRepository;
@@ -29,15 +23,16 @@ import com.capstone.arfly.community.repository.PostRepository;
 import com.capstone.arfly.member.domain.Member;
 import com.capstone.arfly.member.repository.MemberRepository;
 import jakarta.validation.Valid;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
@@ -242,6 +237,78 @@ public class PostService {
             postWriter.updatePost(postId, requestDto);
         }
     }
+
+
+    // 게시글 좋아요 목록 불러오기(무한 스크롤 , 최신순, 좋아요순 정렬)
+    public PostListResponseDto getPosts(String sort, Long cursor, int size){
+        // 더 조회해서 다음 페이지 있는지 확인하기
+        PageRequest pageRequest = PageRequest.of(0, size+1);
+        List<Post> posts;
+
+        if("likes".equalsIgnoreCase(sort)){
+            Integer likesCursor =null;
+            if(cursor != null){
+                // 좋아요 수 찾기
+                Post cursorPost = postRepository.findById(cursor)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
+                likesCursor = cursorPost.getLikeCount();
+            }
+            posts = postRepository.findLikedPosts(cursor, likesCursor, pageRequest);
+        }else {
+            // 기본은 최신순임
+            posts = postRepository.findLatestPosts(cursor, pageRequest);
+        }
+
+        boolean hasNext = posts.size() > size;
+        if(hasNext){
+            posts.remove(size); // 확인용 마지막 1개 데이터는 응답에서 재거
+        }
+
+        Long nextCursor = posts.isEmpty() ? null : posts.get(posts.size()-1).getId();
+
+        // 게시글에 매핑된 모든 파일 한번의 쿼리로 다 가져오기
+        List<PostImage> allPostImages = postImageRepository.findAllByPostInWithFile(posts);
+
+        Map<Long, List<PostImage>> imageMap = allPostImages.stream()
+                .collect(Collectors.groupingBy(pi -> pi.getPost().getId()));
+
+        List<PostListResponseDto.PostSummary> postSummaries =  posts.stream().map(post ->{
+
+            List<PostImage> postImages = imageMap.getOrDefault(post.getId(), Collections.emptyList());
+
+            List<File> postFiles = postImages.stream()
+                    .map(PostImage::getFile)
+                    .toList();
+
+            // 썸네일 최대 3개 추출
+            List<String> thumbnails = postFiles.stream()
+                    .limit(3)
+                    .map(file -> s3Uploader.getPublicUrl(file.getFileKey()))
+                    .toList();
+
+            // 비디오 포함 여부
+            boolean hasVideo = postFiles.stream()
+                    .anyMatch(file -> file.getFileType() == FileType.VIDEO);
+
+            return PostListResponseDto.PostSummary.builder()
+                    .id(post.getId())
+                    .title(post.getTitle())
+                    .thumbnails(thumbnails)
+                    .hasVideo(hasVideo)
+                    .totalMediaCount(postFiles.size())
+                    .likeCount(post.getLikeCount())
+                    .createdAt(post.getCreatedAt().toLocalDate())
+                    .nickname(post.getMember().getNickName())
+                    .build();
+        }).toList();
+
+        return PostListResponseDto.builder()
+                .posts(postSummaries)
+                .meta(PostListResponseDto.Meta.builder().hasNext(hasNext).nextCursor(nextCursor).size(size).build())
+                .build();
+
+    }
+
 }
 
 

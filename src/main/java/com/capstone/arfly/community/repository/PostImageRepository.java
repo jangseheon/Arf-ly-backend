@@ -1,6 +1,7 @@
 package com.capstone.arfly.community.repository;
 
 import com.capstone.arfly.common.domain.File;
+import com.capstone.arfly.community.domain.Post;
 import com.capstone.arfly.community.domain.PostImage;
 import com.capstone.arfly.community.dto.PostDetailFileDto;
 import java.util.List;
@@ -33,4 +34,9 @@ public interface PostImageRepository extends JpaRepository<PostImage,Long> {
     @Modifying(clearAutomatically = true)
     @Query("DELETE FROM PostImage p WHERE p.post.id = :postId ")
     void deleteByPostId(@Param("postId") Long postId);
+
+    @Query("SELECT pi FROM PostImage pi JOIN FETCH pi.file WHERE pi.post IN :posts ORDER BY pi.orderIndex ASC")
+    List<PostImage> findAllByPostInWithFile(@Param("posts") List<Post> posts);
+
+
 }

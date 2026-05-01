@@ -45,7 +45,7 @@ public class PostDetailResponseDto {
                                                         comments, List<PostDetailFileDto> files){
         return PostDetailResponseDto.builder()
                 .id(post.getId()).authorNickname(post.getMember().getNickName()
-                ).title(post.getTitle()).content(post.getContent()).likeCount(post.getLike_count())
+                ).title(post.getTitle()).content(post.getContent()).likeCount(post.getLikeCount())
                 .createdAt(post.getCreatedAt()).images(files).comments(comments).build();
     }
 }

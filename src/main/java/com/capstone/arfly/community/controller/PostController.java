@@ -1,5 +1,6 @@
 package com.capstone.arfly.community.controller;
 
+import com.capstone.arfly.community.dto.PostListResponseDto;
 import com.capstone.arfly.community.dto.CommentRequestDto;
 import com.capstone.arfly.community.dto.PostCreateRequestDto;
 import com.capstone.arfly.community.dto.PostDetailResponseDto;
@@ -7,6 +8,8 @@ import com.capstone.arfly.community.dto.PostUpdateRequestDto;
 import com.capstone.arfly.community.service.PostService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Encoding;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
@@ -25,6 +28,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -148,4 +152,22 @@ public class PostController {
         postService.toggleLike(postId, userId);
         return ResponseEntity.ok().build();
     }
+
+
+    @Operation(summary = "게시글 목록 조회 (무한 스크롤)", description = "최신순 또는 인기순(좋아요순)으로 게시글 목록을 무한 스크롤 방식으로 조회합니다.")
+    @GetMapping
+    public ResponseEntity<PostListResponseDto> getPosts(
+            @Parameter(description = "정렬 방식 (latest: 최신순, likes: 좋아요순)", example = "latest")
+            @RequestParam(defaultValue = "latest") String sort,
+
+            @Parameter(description = "마지막으로 조회한 게시글 ID (첫 페이지 조회 시에는 비워두세요)", example = "119")
+            @RequestParam(required = false) Long cursor,
+
+            @Parameter(description = "한 번에 조회할 게시글 개수", example = "20")
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        PostListResponseDto response = postService.getPosts(sort, cursor, size);
+        return ResponseEntity.ok(response);
+    }
+
 }

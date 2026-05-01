@@ -19,6 +19,7 @@ public enum ErrorCode {
     USER_NOT_EXISTS(HttpStatus.NOT_FOUND,"요청하신 사용자는 존재하지 않습니다.","USER_NOT_EXISTS"),
     USER_IDENTITY_MISMATCH(HttpStatus.BAD_REQUEST,"사용자의 신원 정보가 일치하지 않습니다.","USER_INFO_NOT_MISMATCH"),
 
+    INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST,"잘못된 입력입니다.", "INVALID_INPUT_VALUE"),
     FORBIDDEN(HttpStatus.FORBIDDEN, "접근 권한이 없습니다.", "FORBIDDEN"),
     PET_NOT_FOUND(HttpStatus.NOT_FOUND, "관련 반려동물 정보가 없습니다.","PET_NOT_FOUND"),
     BREED_NOT_FOUND(HttpStatus.BAD_REQUEST,"품종을 찾을 수 없습니다.","BREED_NOT_FOUND"),

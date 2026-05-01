@@ -88,7 +88,7 @@ public class PetService {
     private Integer extractYear(String birthStr) {
         // 아예 값이 안 들어왔을 때의 방어
         if (birthStr == null || birthStr.isBlank()) {
-            throw new BusinessException(ErrorCode.INVALID_HEADER);
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
         }
 
         // 양옆 공백을 자름 (" 2016-12-22 " -> "2016-12-22")
@@ -96,7 +96,7 @@ public class PetService {
 
         // 길이가 4글자 안되면 애초에 잘못된 형식
         if (trimmedBirth.length() < 4) {
-            throw new BusinessException(ErrorCode.INVALID_HEADER);
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
         }
 
         try {
@@ -104,7 +104,7 @@ public class PetService {
             return Integer.parseInt(trimmedBirth.substring(0, 4));
         } catch (NumberFormatException e) {
             //abcd-12-22처럼 숫자가 아닌 값을 보냈을 때의 방어
-            throw new BusinessException(ErrorCode.INVALID_HEADER);
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
         }
     }
 
