@@ -170,4 +170,25 @@ public class PostController {
         return ResponseEntity.ok(response);
     }
 
+    // 검색 api 포인트
+    @Operation(summary = "게시글 검색", description = "키워드로 게시글을 검색하고 총 검색 결과 개수를 함께 반환합니다.")
+    @GetMapping("/search")
+    public ResponseEntity<PostListResponseDto> searchPosts(
+            @Parameter(description = "검색할 키워드", required = true)
+            @RequestParam String keyword,
+
+            @Parameter(description = "정렬 방식 (latest: 최신순, likes: 좋아요순)", example = "latest")
+            @RequestParam(defaultValue = "latest") String sort,
+
+            @Parameter(description = "마지막으로 조회한 게시글 ID (첫 페이지 조회 시에는 비워두세요)", example = "119")
+            @RequestParam(required = false) Long cursor,
+
+            @Parameter(description = "한 번에 조회할 게시글 개수", example = "20")
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        PostListResponseDto response = postService.searchPosts(keyword, sort, cursor, size);
+        return ResponseEntity.ok(response);
+    }
+
+
 }

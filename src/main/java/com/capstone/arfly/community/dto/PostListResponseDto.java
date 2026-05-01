@@ -59,5 +59,8 @@ public class PostListResponseDto
 
         @Schema(description = "요청한 페이지 사이즈", example = "20")
         private Integer size;
+
+        @Schema(description = "검색 결과 총 개수 (검색 첫 페이지 조회 시에만 포함, 일반 조회 시에는 null)", example = "148")
+        private Long totalCount;
     }
 }
