@@ -110,7 +110,7 @@ public class PetService {
 
 
     // 품종 조회
-    @Transactional
+    @Transactional(readOnly = true)
     public List<String> getBreedsBySpecies(Species species) {
         List<Breeds> breedsList = breedsRepository.findBySpecies(species);
 

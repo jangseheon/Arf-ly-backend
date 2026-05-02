@@ -17,11 +17,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class MemberService {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
 
+    @Transactional(readOnly = true)
     public boolean isUsernameAvailable(UserNameCheckRequestDto userNameCheckRequestDto) {
         Optional<Member> member = memberRepository.findByNickName(userNameCheckRequestDto.getNickname());
         if(member.isPresent()){
@@ -30,6 +30,7 @@ public class MemberService {
         return true;
     }
 
+    @Transactional(readOnly = true)
     public boolean isIdAvailable(UserIdCheckRequestDto userIdCheckRequestDto) {
         Optional<Member> member = memberRepository.findByUserId(userIdCheckRequestDto.getUserId());
         if(member.isPresent()){

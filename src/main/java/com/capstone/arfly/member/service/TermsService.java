@@ -11,10 +11,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class TermsService {
     private final TermsRepository termsRepository;
 
+    @Transactional(readOnly = true)
     public List<LatestTermsResponseDto> getLatestAgreements() {
         List<Terms> latestTemrsList = termsRepository.findByLatestTrue();
 
