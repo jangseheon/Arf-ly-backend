@@ -38,7 +38,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@Transactional
 @RequiredArgsConstructor
 @Slf4j
 public class AuthService {
@@ -49,6 +48,7 @@ public class AuthService {
     private final JwtTokenUtil jwtTokenUtil;
     private final RefreshTokenRepository refreshTokenRepository;
 
+    @Transactional
     public Member create(MemberCreateDto memberCreateDto) {
         //중복 체크
         memberRepository.findByUserId(memberCreateDto.getUserId()).ifPresent(m -> {
@@ -114,6 +114,7 @@ public class AuthService {
         return response;
     }
 
+    @Transactional(readOnly = true)
     public Member login(MemberLoginDto memberLoginDto) {
         //ID 확인
         Optional<Member> optMember = memberRepository.findByUserId(memberLoginDto.getUserId());
@@ -130,6 +131,7 @@ public class AuthService {
     }
 
 
+    @Transactional(readOnly = true)
     public Member validateRefreshToken(AccessTokenRequestDto accessTokenRequestDto) {
         //토큰 유효성 검증
         jwtTokenUtil.validateRefreshToken(accessTokenRequestDto.getRefreshToken());
@@ -142,6 +144,7 @@ public class AuthService {
     }
 
 
+    @Transactional
     public void logout(LogoutRequestDto logoutRequestDto) {
         //토큰 유효성 검증
         jwtTokenUtil.validateRefreshToken(logoutRequestDto.getRefreshToken());
@@ -155,11 +158,13 @@ public class AuthService {
 
 
     //이미 가입된 사용자인지 확인
+    @Transactional(readOnly = true)
     public Member getMemberBySocialId(String socialId) {
         return memberRepository.findBySocialId(socialId).orElse(null);
     }
 
     //Oauth 사용자 생성
+    @Transactional
     public Member createOauth(String socialId, String email, SocialType socialType, String nickname) {
         Member member;
         if (nickname == null || nickname.isBlank()) {
@@ -176,6 +181,7 @@ public class AuthService {
 
 
     //전화번호 및 UID 중복 검사
+    @Transactional(readOnly = true)
     public void verifyPhoneAuthInfo(PhoneAuthInfoDto phoneAuthInfo) {
         Optional<Member> findMember = memberRepository.findByFirebaseUidAndPhoneNumber(
                 phoneAuthInfo.getUid(), phoneAuthInfo.getPhoneNumber());
@@ -184,6 +190,7 @@ public class AuthService {
         }
     }
 
+    @Transactional(readOnly = true)
     public Member findUserId(PhoneAuthInfoDto phoneAuthInfoDto) {
         Optional<Member> findMember = memberRepository.findByFirebaseUidAndPhoneNumber(
                 phoneAuthInfoDto.getUid(), phoneAuthInfoDto.getPhoneNumber());
@@ -193,6 +200,7 @@ public class AuthService {
         return findMember.get();
     }
 
+    @Transactional(readOnly = true)
     public Member authenticateUserForPasswordReset(PhoneAuthInfoDto phoneAuthInfoDto, String userId){
         Optional<Member> findMember = memberRepository.findByFirebaseUidAndPhoneNumber(
                 phoneAuthInfoDto.getUid(), phoneAuthInfoDto.getPhoneNumber());
@@ -206,6 +214,7 @@ public class AuthService {
         return member;
     }
 
+    @Transactional
     public void resetPassword(Long id, String newPassword){
         Optional<Member> findMember = memberRepository.findById(id);
         if(findMember.isEmpty()){

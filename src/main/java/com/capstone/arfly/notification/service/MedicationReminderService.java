@@ -19,17 +19,18 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class MedicationReminderService {
     private final MedicationReminderRepository medicationReminderRepository;
     private final MemberRepository memberRepository;
 
+    @Transactional
     public void createReminder(@Valid CreateMedicationReminderRequest reminderRequest, Long userId) {
         Member member = memberRepository.getReferenceById(userId);
         MedicationReminder newReminder = MedicationReminder.create(reminderRequest, member);
         medicationReminderRepository.save(newReminder);
     }
 
+    @Transactional(readOnly = true)
     public List<GetMedicationRemindersResponse> getReminderList(Long userId) {
         List<MedicationReminder> reminders = medicationReminderRepository.findByMemberIdOrderByReminderTimeAsc(
                 userId);
@@ -45,6 +46,7 @@ public class MedicationReminderService {
         return reminderList;
     }
 
+    @Transactional
     public void updateMedicationReminder(Long alarmId, @Valid UpdateMedicationReminderRequest request,
                                          Long userId) {
         //유저의 알람이 맞는지 확인
@@ -62,6 +64,7 @@ public class MedicationReminderService {
         }
     }
 
+    @Transactional
     public void deleteMedicationReminder(Long alarmId, Long userId) {
         MedicationReminder reminder = medicationReminderRepository.findByIdAndMemberId(alarmId, userId)
                 .orElseThrow(MedicationReminderNotFoundException::new);
@@ -69,6 +72,7 @@ public class MedicationReminderService {
         medicationReminderRepository.delete(reminder);
     }
 
+    @Transactional
     public void updateMedicationReminderStatus(Long alarmId, Long userId, UpdateMedicationReminderStatusRequest request) {
         MedicationReminder reminder = medicationReminderRepository.findByIdAndMemberId(alarmId, userId)
                 .orElseThrow(MedicationReminderNotFoundException::new);
