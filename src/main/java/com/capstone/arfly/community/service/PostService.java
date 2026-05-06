@@ -5,7 +5,6 @@ import com.capstone.arfly.common.domain.File;
 import com.capstone.arfly.common.domain.FileType;
 import com.capstone.arfly.common.dto.FileDetailDto;
 import com.capstone.arfly.common.exception.*;
-import com.capstone.arfly.common.repository.FileRepository;
 import com.capstone.arfly.common.util.S3Uploader;
 import com.capstone.arfly.community.constant.LikeEventType;
 import com.capstone.arfly.community.domain.Comment;
@@ -15,20 +14,9 @@ import com.capstone.arfly.community.domain.PostImage;
 import com.capstone.arfly.community.dto.*;
 import com.capstone.arfly.community.event.CommentCreatedEvent;
 import com.capstone.arfly.community.event.PostLikeEvent;
-import com.capstone.arfly.community.repository.CommentMentionRepository;
-import com.capstone.arfly.community.repository.CommentRepository;
-import com.capstone.arfly.community.repository.PostImageRepository;
-import com.capstone.arfly.community.repository.PostLikeRepository;
-import com.capstone.arfly.community.repository.PostRepository;
+import com.capstone.arfly.community.repository.*;
 import com.capstone.arfly.member.domain.Member;
 import com.capstone.arfly.member.repository.MemberRepository;
-import jakarta.validation.Valid;
-
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -38,6 +26,11 @@ import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
