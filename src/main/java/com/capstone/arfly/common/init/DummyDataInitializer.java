@@ -22,9 +22,7 @@ import com.capstone.arfly.member.repository.TermsRepository;
 import com.capstone.arfly.member.repository.UserTermsAgreementRepository;
 import com.capstone.arfly.notification.domain.DeviceType;
 import com.capstone.arfly.notification.domain.FcmToken;
-import com.capstone.arfly.notification.domain.MedicationReminder;
 import com.capstone.arfly.notification.repository.FcmTokenRepository;
-import com.capstone.arfly.notification.repository.MedicationReminderRepository;
 import com.capstone.arfly.pet.domain.Breeds;
 import com.capstone.arfly.pet.domain.Pet;
 import com.capstone.arfly.pet.domain.PetAllergy;
@@ -35,7 +33,6 @@ import com.capstone.arfly.pet.repository.PetAllergyRepository;
 import com.capstone.arfly.pet.repository.PetRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -48,6 +45,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -71,8 +69,8 @@ public class DummyDataInitializer implements CommandLineRunner {
     private final PostLikeRepository postLikeRepository;
     private final CommentRepository commentRepository;
     private final CommentMentionRepository commentMentionRepository;
-    private final MedicationReminderRepository medicationReminderRepository;
     private final PasswordEncoder passwordEncoder;
+    private final RedisTemplate<String, String> redisTemplate;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -169,15 +167,6 @@ public class DummyDataInitializer implements CommandLineRunner {
         "식욕이 엄청 좋아서 먹방 찍어봤어요! 같이 봐요~"
     };
 
-    private static final String[] MEDICATION_TITLES = {
-        "심장사상충 예방약", "벼룩 진드기 예방약", "관절 영양제", "피부 영양제", "오메가3 보충제",
-        "프로바이오틱스", "눈 영양제", "간 영양제", "비타민 보충제", "칼슘 영양제",
-        "신장 건강 보조제", "항생제", "소화 효소제", "면역 강화제", "구충제",
-        "피부 연고 도포", "귀 청결제 점이", "치석 제거 보조제", "혈당 조절 보조제", "갑상선 약",
-        "스트레스 완화제", "노령견 종합영양제", "체중 조절 보조제", "관절염 치료제", "피부 보습제",
-        "눈물자국 개선제", "구강 청결제", "발바닥 보호제", "멀미약", "항히스타민제"
-    };
-
     private static final String[] COMMENT_CONTENTS = {
         "저도 같은 경험 했어요! 정말 공감돼요.",
         "우리 애도 그런 적 있었는데 금방 나았어요 걱정 마세요~",
@@ -272,7 +261,6 @@ public class DummyDataInitializer implements CommandLineRunner {
         createPostLikes(members, posts);
         createComments(members, posts);
         createMentionComments(members, posts);
-        createMedicationReminders(members);
 
         log.info("더미 데이터 초기화 완료.");
     }
@@ -599,6 +587,7 @@ public class DummyDataInitializer implements CommandLineRunner {
         Set<String> usedPairs = new HashSet<>();
         List<PostLike> likes = new ArrayList<>(300);
         Map<Long, Integer> likeCountMap = new HashMap<>();
+        Map<Long, Set<String>> likeUsersMap = new HashMap<>();
 
         int maxAttempts = 10_000;
         int attempts = 0;
@@ -614,17 +603,27 @@ public class DummyDataInitializer implements CommandLineRunner {
                     .post(post)
                     .build());
                 likeCountMap.merge(post.getId(), 1, Integer::sum);
+                likeUsersMap.computeIfAbsent(post.getId(), k -> new HashSet<>())
+                    .add(String.valueOf(member.getId()));
             }
         }
         postLikeRepository.saveAll(likes);
 
-        // Post.likeCount 동기화
+        // DB likeCount 동기화
         entityManager.flush();
         likeCountMap.forEach((postId, count) ->
             entityManager.createQuery("UPDATE Post p SET p.likeCount = :count WHERE p.id = :id")
                 .setParameter("count", count)
                 .setParameter("id", postId)
                 .executeUpdate()
+        );
+
+        // Redis likeCount 및 유저 Set 동기화
+        likeCountMap.forEach((postId, count) ->
+            redisTemplate.opsForValue().set("post:like:" + postId, String.valueOf(count))
+        );
+        likeUsersMap.forEach((postId, userIds) ->
+            redisTemplate.opsForSet().add("post:like:users:" + postId, userIds.toArray(new String[0]))
         );
 
         log.info("게시글 좋아요 {}개 생성 완료", likes.size());
@@ -696,28 +695,4 @@ public class DummyDataInitializer implements CommandLineRunner {
         log.info("맨션 댓글 {}개, CommentMention {}개 생성 완료", comments.size(), mentions.size());
     }
 
-    private void createMedicationReminders(List<Member> members) {
-        // 멤버당 1개씩, 총 30개
-        List<MedicationReminder> reminders = new ArrayList<>(30);
-        int[] reminderHours = {7, 8, 9, 12, 13, 18, 20, 21};
-
-        for (int i = 0; i < 30; i++) {
-            Member member = members.get(i);
-            LocalTime time = LocalTime.of(
-                reminderHours[random.nextInt(reminderHours.length)],
-                random.nextInt(2) * 30  // 정각 or 30분
-            );
-
-            reminders.add(MedicationReminder.builder()
-                .member(member)
-                .title(MEDICATION_TITLES[i % MEDICATION_TITLES.length])
-                .reminderTime(time)
-                .content("매일 " + time + "에 복용")
-                .active(random.nextDouble() > 0.2)  // 80% 활성
-                .build());
-        }
-        medicationReminderRepository.saveAll(reminders);
-
-        log.info("약 알림 {}개 생성 완료", reminders.size());
-    }
 }
