@@ -23,6 +23,7 @@ public enum ErrorCode {
     FORBIDDEN(HttpStatus.FORBIDDEN, "접근 권한이 없습니다.", "FORBIDDEN"),
     PET_NOT_FOUND(HttpStatus.NOT_FOUND, "관련 반려동물 정보가 없습니다.","PET_NOT_FOUND"),
     BREED_NOT_FOUND(HttpStatus.BAD_REQUEST,"품종을 찾을 수 없습니다.","BREED_NOT_FOUND"),
+    PET_OWNER_MISMATCH(HttpStatus.BAD_REQUEST,"요청한 사용자와 반려동물 주인의 정보가 다릅니다.","PET_OWNER_MISMATCH"),
 
     FILE_EMPTY(HttpStatus.BAD_REQUEST,"업로드할 파일이 없습니다.","FILE_EMPTY"),
     FILENAME_MISSING(HttpStatus.BAD_REQUEST,"파일명이 존재하지 않습니다.","FILENAME_MISSING"),
@@ -38,7 +39,10 @@ public enum ErrorCode {
     MAP_PHOTO_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "구글 맵 api으로 사진을 가져오는 도중 오류가 발생했습니다.", "MAP_PHOTO_ERROR"),
     INVALID_PLACES_ID(HttpStatus.BAD_REQUEST, "잘못된 placesId입니다.","INVALID_PLACES_ID"),
     POST_AUTHOR_MISMATCH(HttpStatus.FORBIDDEN,"게시글 작성자만 삭제할 수 있습니다.", "POST_AUTHOR_MISMATCH"),
-    POST_FILE_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 게시글에 존재하지 않는 파일입니다.", "POST_FILE_NOT_FOUND");
+    POST_FILE_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 게시글에 존재하지 않는 파일입니다.", "POST_FILE_NOT_FOUND"),
+
+    AI_MODEL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR,"사진을 진단하는 중 오류가 발생했습니다.","AI_MODEL_ERROR"),
+    OPENAI_API_ERROR(HttpStatus.INTERNAL_SERVER_ERROR,"관리법 생성 중 오류가 발생했습니다.","OPENAI_API_ERROR");
 
 
     //예외 상태 코드
