@@ -9,11 +9,12 @@ import com.capstone.arfly.community.domain.PostImage;
 import com.capstone.arfly.community.dto.PostUpdateRequestDto;
 import com.capstone.arfly.community.repository.PostImageRepository;
 import com.capstone.arfly.community.repository.PostRepository;
-import java.util.ArrayList;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -25,8 +26,8 @@ public class PostWriter {
 
     @Transactional
     public void savePostAndImages(Post newPost, List<FileDetailDto> fileDetailList){
-        saveImages(newPost, fileDetailList);
         postRepository.save(newPost);
+        saveImages(newPost, fileDetailList);
     }
 
 
