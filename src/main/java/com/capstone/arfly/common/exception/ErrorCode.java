@@ -15,34 +15,38 @@ public enum ErrorCode {
     INVALID_HEADER(HttpStatus.BAD_REQUEST, "Authorization 헤더 형식이 올바르지 않습니다.", "INVALID_HEADER"),
     EMPTY_TOKEN(HttpStatus.BAD_REQUEST, "토큰 정보가 비어있습니다.", "EMPTY_TOKEN"),
     MISSING_TOKEN_INFO(HttpStatus.BAD_REQUEST, "토큰 내 필수 정보(UID/전화번호)가 누락되었습니다.", "MISSING_TOKEN_INFO"),
-    OAUTH_ACCESS_TOKEN_FAIL(HttpStatus.BAD_REQUEST,"Oauth AccessToken 발급에 실패했습니다.","INVALID_METADATA"),
-    USER_NOT_EXISTS(HttpStatus.NOT_FOUND,"요청하신 사용자는 존재하지 않습니다.","USER_NOT_EXISTS"),
-    USER_IDENTITY_MISMATCH(HttpStatus.BAD_REQUEST,"사용자의 신원 정보가 일치하지 않습니다.","USER_INFO_NOT_MISMATCH"),
+    OAUTH_ACCESS_TOKEN_FAIL(HttpStatus.BAD_REQUEST, "Oauth AccessToken 발급에 실패했습니다.", "INVALID_METADATA"),
+    USER_NOT_EXISTS(HttpStatus.NOT_FOUND, "요청하신 사용자는 존재하지 않습니다.", "USER_NOT_EXISTS"),
+    USER_IDENTITY_MISMATCH(HttpStatus.BAD_REQUEST, "사용자의 신원 정보가 일치하지 않습니다.", "USER_INFO_NOT_MISMATCH"),
 
-    INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST,"잘못된 입력입니다.", "INVALID_INPUT_VALUE"),
+    INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "잘못된 입력입니다.", "INVALID_INPUT_VALUE"),
     FORBIDDEN(HttpStatus.FORBIDDEN, "접근 권한이 없습니다.", "FORBIDDEN"),
-    PET_NOT_FOUND(HttpStatus.NOT_FOUND, "관련 반려동물 정보가 없습니다.","PET_NOT_FOUND"),
-    BREED_NOT_FOUND(HttpStatus.BAD_REQUEST,"품종을 찾을 수 없습니다.","BREED_NOT_FOUND"),
-    PET_OWNER_MISMATCH(HttpStatus.BAD_REQUEST,"요청한 사용자와 반려동물 주인의 정보가 다릅니다.","PET_OWNER_MISMATCH"),
+    PET_NOT_FOUND(HttpStatus.NOT_FOUND, "관련 반려동물 정보가 없습니다.", "PET_NOT_FOUND"),
+    BREED_NOT_FOUND(HttpStatus.BAD_REQUEST, "품종을 찾을 수 없습니다.", "BREED_NOT_FOUND"),
+    PET_OWNER_MISMATCH(HttpStatus.BAD_REQUEST, "요청한 사용자와 반려동물 주인의 정보가 다릅니다.", "PET_OWNER_MISMATCH"),
 
-    FILE_EMPTY(HttpStatus.BAD_REQUEST,"업로드할 파일이 없습니다.","FILE_EMPTY"),
-    FILENAME_MISSING(HttpStatus.BAD_REQUEST,"파일명이 존재하지 않습니다.","FILENAME_MISSING"),
-    FILE_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR,"현재 파일과 관련하여 서버에 문제가 있습니다.","FILE_NOT_FOUND"),
-    FILE_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR,"파일 업로드에 실패했습니다.","FILE_UPLOAD_FAILED"),
-    INVALID_FILE_TYPE(HttpStatus.BAD_REQUEST,"잘못된 파일 유형입니다.","INVALID_FILE_TYPE"),
-    FILE_TOO_LARGE(HttpStatus.BAD_REQUEST,"파일 용량을 초과했습니다.", "FILE_TOO_LARGE"),
-    MEDICATION_REMINDER_NOT_FOUND(HttpStatus.NOT_FOUND,"요청한 알람은 존재하지 않습니다.", "REMINDER_NOT_FOUND"),
+    FILE_EMPTY(HttpStatus.BAD_REQUEST, "업로드할 파일이 없습니다.", "FILE_EMPTY"),
+    FILENAME_MISSING(HttpStatus.BAD_REQUEST, "파일명이 존재하지 않습니다.", "FILENAME_MISSING"),
+    FILE_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR, "현재 파일과 관련하여 서버에 문제가 있습니다.", "FILE_NOT_FOUND"),
+    FILE_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "파일 업로드에 실패했습니다.", "FILE_UPLOAD_FAILED"),
+    INVALID_FILE_TYPE(HttpStatus.BAD_REQUEST, "잘못된 파일 유형입니다.", "INVALID_FILE_TYPE"),
+    FILE_TOO_LARGE(HttpStatus.BAD_REQUEST, "파일 용량을 초과했습니다.", "FILE_TOO_LARGE"),
+    MEDICATION_REMINDER_NOT_FOUND(HttpStatus.NOT_FOUND, "요청한 알람은 존재하지 않습니다.", "REMINDER_NOT_FOUND"),
     POST_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 게시글입니다.", "POST_NOT_FOUND"),
     INVALID_MENTION(HttpStatus.BAD_REQUEST, "본문의 멘션 정보와 전달된 멘션 ID 목록이 일치하지 않습니다.", "INVALID_MENTION"),
 
     GOOGLE_MAP_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "구글 맵 api를 실행하는 도중 오류가 발생했습니다.", "GOOGLE_MAP_ERROR"),
     MAP_PHOTO_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "구글 맵 api으로 사진을 가져오는 도중 오류가 발생했습니다.", "MAP_PHOTO_ERROR"),
-    INVALID_PLACES_ID(HttpStatus.BAD_REQUEST, "잘못된 placesId입니다.","INVALID_PLACES_ID"),
-    POST_AUTHOR_MISMATCH(HttpStatus.FORBIDDEN,"게시글 작성자만 삭제할 수 있습니다.", "POST_AUTHOR_MISMATCH"),
+    INVALID_PLACES_ID(HttpStatus.BAD_REQUEST, "잘못된 placesId입니다.", "INVALID_PLACES_ID"),
+    POST_AUTHOR_MISMATCH(HttpStatus.FORBIDDEN, "게시글 작성자만 삭제할 수 있습니다.", "POST_AUTHOR_MISMATCH"),
     POST_FILE_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 게시글에 존재하지 않는 파일입니다.", "POST_FILE_NOT_FOUND"),
 
-    AI_MODEL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR,"사진을 진단하는 중 오류가 발생했습니다.","AI_MODEL_ERROR"),
-    OPENAI_API_ERROR(HttpStatus.INTERNAL_SERVER_ERROR,"관리법 생성 중 오류가 발생했습니다.","OPENAI_API_ERROR");
+    AI_MODEL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "사진을 진단하는 중 오류가 발생했습니다.", "AI_MODEL_ERROR"),
+    OPENAI_API_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "관리법 생성 중 오류가 발생했습니다.", "OPENAI_API_ERROR"),
+
+
+    EMPTY_TERMS_AGREEMENT(HttpStatus.BAD_REQUEST, "약관 동의 항목이 비어있습니다.", "EMPTY_TERMS_AGREEMENT"),
+    INVALID_TERMS_ID(HttpStatus.BAD_REQUEST, "유효하지 않은 약관 ID입니다.", "INVALID_TERMS_ID");
 
 
     //예외 상태 코드
