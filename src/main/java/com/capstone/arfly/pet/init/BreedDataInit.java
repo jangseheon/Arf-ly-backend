@@ -7,6 +7,7 @@ import com.capstone.arfly.pet.service.PetService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
@@ -16,6 +17,7 @@ import java.nio.charset.StandardCharsets;
 
 @Slf4j
 @Component
+@Order(1)
 @RequiredArgsConstructor
 public class BreedDataInit implements CommandLineRunner {
     private final BreedsRepository breedsRepository;
