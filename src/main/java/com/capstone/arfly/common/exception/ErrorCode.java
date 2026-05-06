@@ -44,6 +44,7 @@ public enum ErrorCode {
     AI_MODEL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "사진을 진단하는 중 오류가 발생했습니다.", "AI_MODEL_ERROR"),
     OPENAI_API_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "관리법 생성 중 오류가 발생했습니다.", "OPENAI_API_ERROR"),
 
+
     EMPTY_TERMS_AGREEMENT(HttpStatus.BAD_REQUEST, "약관 동의 항목이 비어있습니다.", "EMPTY_TERMS_AGREEMENT"),
     INVALID_TERMS_ID(HttpStatus.BAD_REQUEST, "유효하지 않은 약관 ID입니다.", "INVALID_TERMS_ID");
 

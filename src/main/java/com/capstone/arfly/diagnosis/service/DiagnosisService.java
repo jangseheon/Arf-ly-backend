@@ -1,16 +1,34 @@
 package com.capstone.arfly.diagnosis.service;
 
+import com.capstone.arfly.common.domain.File;
+import com.capstone.arfly.common.dto.FileDetailDto;
+import com.capstone.arfly.common.exception.BusinessException;
+import com.capstone.arfly.common.exception.ErrorCode;
+import com.capstone.arfly.common.repository.FileRepository;
 import com.capstone.arfly.common.util.S3Uploader;
 import com.capstone.arfly.diagnosis.domain.DiagnosisImage;
 import com.capstone.arfly.diagnosis.domain.DiagnosisReport;
+import com.capstone.arfly.diagnosis.dto.AiResponse;
 import com.capstone.arfly.diagnosis.dto.DiagnosisListResponseDto;
+import com.capstone.arfly.diagnosis.dto.DiagnosisResponseDto;
 import com.capstone.arfly.diagnosis.repository.DiagnosisImageRepository;
 import com.capstone.arfly.diagnosis.repository.DiagnosisReportRepository;
+import com.capstone.arfly.pet.domain.Pet;
+import com.capstone.arfly.pet.domain.PetAllergy;
+import com.capstone.arfly.pet.repository.PetAllergyRepository;
+import com.capstone.arfly.pet.repository.PetRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.MediaType;
+import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.reactive.function.client.WebClient;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -20,9 +38,14 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class DiagnosisService {
 
+    private final PetRepository petRepository;
+    private final PetAllergyRepository petAllergyRepository;
     private final DiagnosisReportRepository diagnosisReportRepository;
     private final DiagnosisImageRepository diagnosisImageRepository;
+    private final FileRepository fileRepository;
     private final S3Uploader s3Uploader;
+    private final WebClient webClient;
+    private final ChatClient chatClient;
 
 
     @Transactional(readOnly = true)
@@ -79,5 +102,154 @@ public class DiagnosisService {
                         .size(size)
                         .build())
                 .build();
+    }
+
+    @Transactional
+    public DiagnosisResponseDto getDiagnosis(Long petId, MultipartFile file, Long userId){
+        Pet pet = petRepository.findById(petId).orElseThrow(() -> new BusinessException(ErrorCode.PET_NOT_FOUND));
+
+        if(!pet.getMember().getId().equals(userId)) throw new BusinessException(ErrorCode.PET_OWNER_MISMATCH);
+
+        String spices = pet.getSpecies().name();
+
+        AiResponse response;
+
+        try {
+            response = diagnosisSkin(file, spices);
+        } catch (Exception e){
+            throw new BusinessException(ErrorCode.AI_MODEL_ERROR);
+        }
+
+        String disease = cleanDiseaseName(response.getPrediction().getDisease());
+        String probabilityText = response.getPrediction().getProbability();
+        Double probability =  Double.parseDouble(probabilityText.replace("%", ""));
+
+        String management = "";
+
+        try {
+            management = createManagement(pet,disease,probabilityText);
+        }catch (Exception e){
+            throw new BusinessException(ErrorCode.OPENAI_API_ERROR);
+        }
+
+        FileDetailDto metaData = s3Uploader.makeMetaData(file, "pets");
+        s3Uploader.uploadFile(metaData.getKey(), file);
+
+        File image = File.builder()
+                .fileName(metaData.getOriginalFileName())
+                .fileKey(metaData.getKey())
+                .fileSize(metaData.getFileSize())
+                .fileType(metaData.getFileType())
+                .deleted(false)
+                .build();
+
+        image = fileRepository.save(image);
+
+        String imageUrl = s3Uploader.getPublicUrl(image.getFileKey());
+
+        DiagnosisReport report = DiagnosisReport.builder()
+                .pet(pet)
+                .diseaseName(disease)
+                .probability(probability)
+                .management(management)
+                .build();
+
+        DiagnosisReport savedReport = diagnosisReportRepository.save(report);
+
+        DiagnosisImage diagnosisImage = DiagnosisImage.builder()
+                .diagnosisReport(savedReport)
+                .file(image)
+                .build();
+
+        diagnosisImageRepository.save(diagnosisImage);
+
+        return DiagnosisResponseDto.builder()
+                .id(savedReport.getId())
+                .petName(pet.getName())
+                .species(pet.getSpecies())
+                .breed(pet.getBreeds().getName())
+                .sex(pet.getSex())
+                .neutered(pet.getNeutered())
+                .birth(pet.getBirth())
+                .imageUrl(imageUrl)
+                .diseaseName(savedReport.getDiseaseName())
+                .probability(savedReport.getProbability())
+                .management(savedReport.getManagement())
+                .build();
+    }
+
+    private AiResponse diagnosisSkin(MultipartFile file, String spices) throws IOException {
+
+        MultipartBodyBuilder builder = new MultipartBodyBuilder();
+
+        // ai 서버에 보낼 file 생성
+        builder.part("file", new ByteArrayResource(file.getBytes()) {
+                    @Override
+                    public String getFilename() {
+                        return file.getOriginalFilename();
+                    }
+                })
+                .contentType(MediaType.parseMediaType(file.getContentType()));
+
+        return webClient.post()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/diagnose")
+                        .queryParam("animal", spices)
+                        .build())
+                .contentType(MediaType.MULTIPART_FORM_DATA)
+                .bodyValue(builder.build())
+                .retrieve()
+                .bodyToMono(AiResponse.class)
+                .block();
+    }
+
+    private String cleanDiseaseName(String diseaseName) {
+        if (diseaseName == null) {
+            return null;
+        }
+
+        if (diseaseName.startsWith("정상")) {
+            return "정상";
+        }
+
+        if (diseaseName.startsWith("A") && diseaseName.length() > 3) {
+            return diseaseName.substring(3);
+        }
+
+        return diseaseName;
+    }
+
+    private String createManagement(Pet pet, String disease, String probabilityText){
+
+        List<PetAllergy> allergies = petAllergyRepository.findAllByPet(pet);
+
+        String prompt = """
+                당신은 반려동물 피부 건강 관리 안내문을 작성하는 도우미입니다.
+                
+                [반려동물 정보]
+                이름: %s
+                태어난 년도: %s
+                품종: %s
+                알레르기 정보: %s
+                특이사항: %s
+                
+                [AI 피부 분석 결과]
+                의심 질환: %s
+                예측 확률: %s
+                
+                """.formatted(
+                pet.getName(),
+                pet.getBirth(),
+                pet.getBreeds(),
+                allergies.isEmpty() ? "없음" : allergies,
+                pet.getNote() == null ? "없음" : pet.getNote(),
+                disease,
+                probabilityText
+        );
+
+        return chatClient.prompt()
+                .user(prompt)
+                .call()
+                .content();
     }
 }
