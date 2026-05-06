@@ -20,6 +20,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @RequiredArgsConstructor
 public class SecurityConfig {
     private final JwtTokenFilter jwtTokenFilter;
+
     //비밀번호 암호화 싱글톤 객체 생성
     @Bean
     public PasswordEncoder makePassword() {
@@ -35,10 +36,12 @@ public class SecurityConfig {
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(a ->
-                        a.requestMatchers("/auth/create","/auth/doLogin","/auth/google/doLogin","/auth/kakao/doLogin","/auth/naver/doLogin"
-                                ,"/auth/refresh","/terms/latest","/member/check-username","/auth/phone/verify"
-                                ,"/auth/token/refresh","/swagger-ui/**","/v3/api-docs/**","/swagger-ui.html","/auth/id/find","/auth/password/verify","/auth/password/reset",
-                                "/oauth2/**","/member/check-userId").permitAll().anyRequest().authenticated())
+                        a.requestMatchers("/auth/create", "/auth/doLogin", "/auth/google/doLogin",
+                                "/auth/kakao/doLogin", "/auth/naver/doLogin"
+                                , "/auth/refresh", "/terms/latest", "/member/check-username", "/auth/phone/verify"
+                                , "/auth/token/refresh", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html",
+                                "/auth/id/find", "/auth/password/verify", "/auth/password/reset",
+                                "/oauth2/**", "/member/check-userId").permitAll().anyRequest().authenticated())
                 .addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
@@ -47,7 +50,8 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
-        corsConfiguration.setAllowedOrigins(List.of("http://localhost:3000","http://localhost:5173"));
+        corsConfiguration.setAllowedOrigins(
+                List.of("http://localhost:3000", "http://localhost:5173", "https://arf-ly-web.vercel.app/"));
         corsConfiguration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         corsConfiguration.setAllowedHeaders(List.of("*"));
         corsConfiguration.setAllowCredentials(true);
