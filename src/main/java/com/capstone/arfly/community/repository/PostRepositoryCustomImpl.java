@@ -60,8 +60,8 @@ public class PostRepositoryCustomImpl implements PostRepositoryCustom {
     //  동적 쿼리 조건
     private BooleanExpression containsKeyword(String keyword) {
         if (!StringUtils.hasText(keyword)) return null;
-        return post.title.containsIgnoreCase(keyword)
-                .or(post.content.containsIgnoreCase(keyword));
+        return post.title.containsIgnoreCase(keyword);
+
     }
 
     private BooleanExpression ltCursorId(Long cursorId) {
