@@ -1,5 +1,6 @@
 package com.capstone.arfly.diagnosis.repository;
 
+import com.capstone.arfly.pet.domain.Pet;
 import org.springframework.data.jpa.repository.JpaRepository;
 import com.capstone.arfly.diagnosis.domain.DiagnosisReport;
 import org.springframework.data.domain.Pageable;
@@ -7,6 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
+
 public interface DiagnosisReportRepository extends JpaRepository<DiagnosisReport, Long> {
 
     @Query("SELECT r FROM DiagnosisReport r " +
@@ -23,6 +26,5 @@ public interface DiagnosisReportRepository extends JpaRepository<DiagnosisReport
             Pageable pageable
     );
 
-
-
+    Optional<DiagnosisReport> findByPet(Pet pet);
 }

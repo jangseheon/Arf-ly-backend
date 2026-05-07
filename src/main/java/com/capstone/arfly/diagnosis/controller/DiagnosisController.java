@@ -52,9 +52,9 @@ public class DiagnosisController {
             summary = "스마트 진단",
             description = "사진을 전송하여 스마트 진단을 생성합니다."
     )
-    @PostMapping(path = "/{petId}/diagnosis", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(path = "/{petId}/diagnoses", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<DiagnosisResponseDto> diagnosisSkin(@Parameter(description = "반려동물 ID", example = "1")
-                                                              @RequestParam(required = false) @PathVariable Long petId,
+                                                              @PathVariable Long petId,
                                                               @Parameter(description = "진단할 사진", schema = @Schema(type = "string", format = "binary"))
                                                               @RequestPart("file") MultipartFile file,
                                                               @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails){
@@ -62,6 +62,22 @@ public class DiagnosisController {
         Long userId = Long.parseLong(userDetails.getUsername());
 
         DiagnosisResponseDto response = diagnosisService.getDiagnosis(petId,file,userId);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(
+            summary = "스마트 진단 조회",
+            description = "reportId를 전달하여 스마트 진단을 조회합니다."
+    )
+    @GetMapping("/diagnoses/{reportId}")
+    public ResponseEntity<DiagnosisResponseDto> getDiagnosisDetail(
+            @Parameter(description = "진단 리포트 ID", example = "1")
+            @PathVariable Long reportId,
+            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails){
+        Long userId = Long.parseLong(userDetails.getUsername());
+
+        DiagnosisResponseDto response = diagnosisService.getDiagnosisDetail(reportId, userId);
 
         return ResponseEntity.ok(response);
     }

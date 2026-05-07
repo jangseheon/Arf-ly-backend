@@ -13,6 +13,7 @@ import com.capstone.arfly.diagnosis.dto.DiagnosisListResponseDto;
 import com.capstone.arfly.diagnosis.dto.DiagnosisResponseDto;
 import com.capstone.arfly.diagnosis.repository.DiagnosisImageRepository;
 import com.capstone.arfly.diagnosis.repository.DiagnosisReportRepository;
+import com.capstone.arfly.member.repository.MemberRepository;
 import com.capstone.arfly.pet.domain.Pet;
 import com.capstone.arfly.pet.domain.PetAllergy;
 import com.capstone.arfly.pet.repository.PetAllergyRepository;
@@ -42,6 +43,7 @@ public class DiagnosisService {
     private final PetAllergyRepository petAllergyRepository;
     private final DiagnosisReportRepository diagnosisReportRepository;
     private final DiagnosisImageRepository diagnosisImageRepository;
+    private final MemberRepository memberRepository;
     private final FileRepository fileRepository;
     private final S3Uploader s3Uploader;
     private final WebClient webClient;
@@ -175,6 +177,36 @@ public class DiagnosisService {
                 .diseaseName(savedReport.getDiseaseName())
                 .probability(savedReport.getProbability())
                 .management(savedReport.getManagement())
+                .build();
+    }
+
+    public DiagnosisResponseDto getDiagnosisDetail(Long reportId, Long userId){
+
+        memberRepository.findById(userId).orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_EXISTS));
+
+        DiagnosisReport report = diagnosisReportRepository.findById(reportId).orElseThrow(
+                () -> new BusinessException(ErrorCode.REPORT_NOT_FOUND));
+
+        Pet pet = report.getPet();
+
+        petRepository.findById(pet.getId()).orElseThrow(() -> new BusinessException(ErrorCode.PET_NOT_FOUND));
+
+        DiagnosisImage reportImage = diagnosisImageRepository.findByDiagnosisReport(report);
+        String fileKey = reportImage.getFile().getFileKey();
+        String imageUrl = s3Uploader.getPublicUrl(fileKey);
+
+        return DiagnosisResponseDto.builder()
+                .id(report.getId())
+                .petName(pet.getName())
+                .species(pet.getSpecies())
+                .breed(pet.getBreeds().getName())
+                .sex(pet.getSex())
+                .neutered(pet.getNeutered())
+                .birth(pet.getBirth())
+                .imageUrl(imageUrl)
+                .diseaseName(report.getDiseaseName())
+                .probability(report.getProbability())
+                .management(report.getManagement())
                 .build();
     }
 
